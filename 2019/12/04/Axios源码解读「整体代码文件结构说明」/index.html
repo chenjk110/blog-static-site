@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"blog.dymox.top","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":true,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="1. 代码文件总体结构图Axios的源代码存放于项目中的lib文件夹下，先来大体看下都有哪些内容： 12345678lib  ├── adapters&#x2F;     # 适配器相关，根据不同的请求类型实现配置初始化和请求逻辑  ├── cancel&#x2F;       # 中断请求相关  ├── core&#x2F;         # 核心部分，其中包括触发请求、拦截器、处理配置等逻辑  ├── helpers&#x2F;">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Axios源码解读「整体代码文件结构说明」">
+<meta property="og:url" content="https://blog.dymox.top/2019/12/04/Axios%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB%E3%80%8C%E6%95%B4%E4%BD%93%E4%BB%A3%E7%A0%81%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%84%E8%AF%B4%E6%98%8E%E3%80%8D/index.html">
+<meta property="og:site_name" content="TanKingKhun&#39;s Blog">
+<meta property="og:description" content="1. 代码文件总体结构图Axios的源代码存放于项目中的lib文件夹下，先来大体看下都有哪些内容： 12345678lib  ├── adapters&#x2F;     # 适配器相关，根据不同的请求类型实现配置初始化和请求逻辑  ├── cancel&#x2F;       # 中断请求相关  ├── core&#x2F;         # 核心部分，其中包括触发请求、拦截器、处理配置等逻辑  ├── helpers&#x2F;">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2019-12-04T16:50:10.000Z">
+<meta property="article:modified_time" content="2021-06-26T11:40:14.444Z">
+<meta property="article:author" content="TanKingKhun">
+<meta property="article:tag" content="JavaScript">
+<meta property="article:tag" content="Axios">
+<meta property="article:tag" content="源码阅读">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://blog.dymox.top/2019/12/04/Axios%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB%E3%80%8C%E6%95%B4%E4%BD%93%E4%BB%A3%E7%A0%81%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%84%E8%AF%B4%E6%98%8E%E3%80%8D/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Axios源码解读「整体代码文件结构说明」 | TanKingKhun's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">TanKingKhun's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.dymox.top/2019/12/04/Axios%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB%E3%80%8C%E6%95%B4%E4%BD%93%E4%BB%A3%E7%A0%81%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%84%E8%AF%B4%E6%98%8E%E3%80%8D/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://avatars.githubusercontent.com/u/14145521?v=4">
+      <meta itemprop="name" content="TanKingKhun">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="TanKingKhun's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Axios源码解读「整体代码文件结构说明」
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-12-05 00:50:10" itemprop="dateCreated datePublished" datetime="2019-12-05T00:50:10+08:00">2019-12-05</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-06-26 19:40:14" itemprop="dateModified" datetime="2021-06-26T19:40:14+08:00">2021-06-26</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="1-代码文件总体结构图"><a href="#1-代码文件总体结构图" class="headerlink" title="1. 代码文件总体结构图"></a>1. 代码文件总体结构图</h1><p>Axios的源代码存放于项目中的<code>lib</code>文件夹下，先来大体看下都有哪些内容：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">lib</span><br><span class="line">  ├── adapters/     <span class="comment"># 适配器相关，根据不同的请求类型实现配置初始化和请求逻辑</span></span><br><span class="line">  ├── cancel/       <span class="comment"># 中断请求相关</span></span><br><span class="line">  ├── core/         <span class="comment"># 核心部分，其中包括触发请求、拦截器、处理配置等逻辑</span></span><br><span class="line">  ├── helpers/      <span class="comment"># 一些通用的帮助函数</span></span><br><span class="line">  ├── defaults.js   <span class="comment"># 默认配置项</span></span><br><span class="line">  ├── axios.js      <span class="comment"># 静态API注入、Axios默认实例</span></span><br><span class="line">  └── utils.js      <span class="comment"># 工具方法</span></span><br></pre></td></tr></table></figure>
+
+<p>源码根据不同的功能整理到不同的文件夹，每个文件夹里都包含该功能相关的若干<code>js</code>文件，较为关键的有<code>adapters</code>、<code>cancel</code>、<code>core</code>、<code>default</code>这几个内容，接下来就逐个进行查看。</p>
+<h1 id="2-适配器相关文件-lib-adapters"><a href="#2-适配器相关文件-lib-adapters" class="headerlink" title="2. 适配器相关文件 (lib/adapters)"></a>2. 适配器相关文件 (lib/adapters)</h1><p>Axios支持在Node以及Browser环境，而这两种环境有不同的http请求方式，比如浏览器中使用的是<code>XMLHttpRequest</code>接口，所以，需要有适配层来实现统一配置的方式请求，以下内容为主要的两种适配器的代码文件：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">lib/adapters</span><br><span class="line">  ├── README.md  <span class="comment"># 说明文档</span></span><br><span class="line">  ├── http.js    <span class="comment"># http请求处理、比如在Node环境中</span></span><br><span class="line">  └── xhr.js     <span class="comment"># xhr请求处理、在浏览器环境中</span></span><br></pre></td></tr></table></figure>
+
+<p>其中<code>README.md</code>文件中说明了该文件夹的主要内容，这边简单解释下：</p>
+<figure class="highlight markdown"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">The modules under <span class="code">`adapters/`</span> are modules that handle dispatching a request and settling a returned <span class="code">`Promise`</span> once a response is received.</span><br><span class="line"></span><br><span class="line">// 分发一个请求，返回一个Promise，并在收到结果时候改变Promise状态</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 使用例子及大致流程内容</span></span><br><span class="line"><span class="keyword">var</span> settle = <span class="built_in">require</span>(<span class="string">'./../core/settle'</span>);</span><br><span class="line"></span><br><span class="line"><span class="built_in">module</span>.exports = <span class="function"><span class="keyword">function</span> <span class="title">myAdapter</span>(<span class="params">config</span>) </span>&#123;</span><br><span class="line">  <span class="comment">// 在这里:</span></span><br><span class="line">  <span class="comment">//  - 配置config与默认配置default进行合并</span></span><br><span class="line">  <span class="comment">//  - 完成请求的转换</span></span><br><span class="line">  <span class="comment">//  - 请求拦截器的运行</span></span><br><span class="line">  </span><br><span class="line">  <span class="comment">// 根据config发起请求</span></span><br><span class="line">  <span class="comment">// 在收到结果时候改变请求的Promise状态</span></span><br><span class="line"></span><br><span class="line">  <span class="keyword">return</span> <span class="keyword">new</span> <span class="built_in">Promise</span>(<span class="function"><span class="keyword">function</span>(<span class="params">resolve, reject</span>) </span>&#123;</span><br><span class="line">  	</span><br><span class="line">    <span class="comment">// 结果对象的结构</span></span><br><span class="line">    <span class="keyword">var</span> response = &#123;</span><br><span class="line">      data: responseData,              <span class="comment">// 结果数据</span></span><br><span class="line">      status: request.status,          <span class="comment">// Http状态码</span></span><br><span class="line">      statusText: request.statusText,  <span class="comment">// Http状态信息</span></span><br><span class="line">      headers: responseHeaders,        <span class="comment">// 结果头部信息</span></span><br><span class="line">      config: config,                  <span class="comment">// 请求的配置</span></span><br><span class="line">      request: request                 <span class="comment">// 请求实例</span></span><br><span class="line">    &#125;;</span><br><span class="line">   </span><br><span class="line">    settle(resolve, reject, response); <span class="comment">// 修改Promise的状态</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 在这里:</span></span><br><span class="line">    <span class="comment">//  - 完成结果的转换</span></span><br><span class="line">    <span class="comment">//  - 结果拦截器的运行</span></span><br><span class="line">  &#125;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>所以在<code>READEME.md</code>文件中已经把主要的流程点解释清楚了，这一层主要所发起请求相关的一系列流程步骤，包括请求转换、结果转换、配置合并、拦截器执行等等一些操作。</p>
+<h1 id="3-取消、中断请求-lib-cancel"><a href="#3-取消、中断请求-lib-cancel" class="headerlink" title="3. 取消、中断请求 (lib/cancel)"></a>3. 取消、中断请求 (lib/cancel)</h1><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">lib/cancel</span><br><span class="line">  ├── Cancel.js       <span class="comment"># Cancel的类定义</span></span><br><span class="line">  ├── CancelToken.js  <span class="comment"># CancelToken的类定义</span></span><br><span class="line">  └── isCancel.js     <span class="comment"># 判断Cancel实例状态</span></span><br></pre></td></tr></table></figure>
+
+<p>这个文件夹主要是和取消请求相关内容，就是中断掉请求并且修改Promise的状态，返回Cancel的信息。</p>
+<h1 id="4-核心部分-lib-core"><a href="#4-核心部分-lib-core" class="headerlink" title="4. 核心部分 (lib/core)"></a>4. 核心部分 (lib/core)</h1><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">lib/core</span><br><span class="line">  ├── Axios.js               <span class="comment"># Axios主类，包含一些常规的请求原型方法：post、get等</span></span><br><span class="line">  ├── InterceptorManager.js  <span class="comment"># 拦截器管理，包括拦截器的注入、弹出、调用等</span></span><br><span class="line">  ├── README.md              <span class="comment"># 说明文旦</span></span><br><span class="line">  ├── buildFullPath.js       <span class="comment"># 生成完整的URL，帮助函数</span></span><br><span class="line">  ├── createError.js         <span class="comment"># 创建Error，并传入enhanceError.js进行注入更多信息</span></span><br><span class="line">  ├── dispatchRequest.js     <span class="comment"># 触发请求</span></span><br><span class="line">  ├── enhanceError.js        <span class="comment"># 为Error实例注入更多信息</span></span><br><span class="line">  ├── mergeConfig.js         <span class="comment"># 配置信息合并</span></span><br><span class="line">  ├── settle.js              <span class="comment"># 改变一个请求的Promise状态</span></span><br><span class="line">  └── transformData.js       <span class="comment"># 转换数据结构，包括请求和结果的数据</span></span><br></pre></td></tr></table></figure>
+
+<p>这个部分主要是一些核心的逻辑部分，包括：</p>
+<ol>
+<li>触发请求</li>
+<li>管理拦截器</li>
+<li>处理配置项</li>
+</ol>
+<h1 id="5-帮助函数-lib-helpers"><a href="#5-帮助函数-lib-helpers" class="headerlink" title="5. 帮助函数 (lib/helpers)"></a>5. 帮助函数 (lib/helpers)</h1><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">lib/helpers</span><br><span class="line">  ├── README.md</span><br><span class="line">  ├── bind.js</span><br><span class="line">  ├── buildURL.js</span><br><span class="line">  ├── combineURLs.js</span><br><span class="line">  ├── cookies.js</span><br><span class="line">  ├── deprecatedMethod.js</span><br><span class="line">  ├── isAbsoluteURL.js</span><br><span class="line">  ├── isURLSameOrigin.js</span><br><span class="line">  ├── isValidXss.js</span><br><span class="line">  ├── normalizeHeaderName.js</span><br><span class="line">  ├── parseHeaders.js</span><br><span class="line">  └── spread.js</span><br></pre></td></tr></table></figure>
+
+<p><code>lib/helpers</code>里面主要是一些帮助函数，比如函数的上下文绑定<code>bind</code>，<code>cookie</code>相关，<code>URL</code>相关的一些处理，而<code>utils.js</code>文件里也是存放着一些通用的工具函数。</p>
+<h1 id="6-通用方法-lib-utils-js"><a href="#6-通用方法-lib-utils-js" class="headerlink" title="6. 通用方法 (lib/utils.js)"></a>6. 通用方法 (lib/utils.js)</h1><p>一些通用的工具函数，例如常用类型判断<code>isArray</code>，<code>isNumber</code>等。</p>
+<h1 id="7-默认配置-lib-default-js"><a href="#7-默认配置-lib-default-js" class="headerlink" title="7. 默认配置 (lib/default.js)"></a>7. 默认配置 (lib/default.js)</h1><p>默认配置的相关处理，包括<code>header</code>、<code>data</code>等。</p>
+<h1 id="8-Axios全局API-lib-axios-js"><a href="#8-Axios全局API-lib-axios-js" class="headerlink" title="8. Axios全局API (lib/axios.js)"></a>8. Axios全局API (lib/axios.js)</h1><p>Axios的默认实例以及曝露的静态API方法。</p>
+<h1 id="文档链接："><a href="#文档链接：" class="headerlink" title="文档链接："></a>文档链接：</h1><p><a href="../Axios源码解读「整体代码文件结构说明」">Axios源码解读「整体代码文件结构说明」</a><br><a href="../Axios源码解读「帮助方法Helpers」">Axios源码解读「帮助方法Helpers」</a><br><a href="../Axios源码解读「通用工具函数」">Axios源码解读「通用工具函数」</a><br><a href="../Axios源码解读「适配器Adapter」">Axios源码解读「适配器Adapter」</a><br><a href="../Axios源码解读「实现请求的取消中断Cancel」">Axios源码解读「实现请求的取消中断Cancel」</a><br><a href="../Axios源码解读「默认配置项default」">Axios源码解读「默认配置项default」</a><br><a href="../Axios源码解读「核心逻辑部分Core」">Axios源码解读「核心逻辑部分Core」</a><br><a href="../Axios源码解读「静态API的注入」">Axios源码解读「静态API的注入」</a></p>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <hr />
+  <h6>如果我的文章对你有帮助，可以请我喝杯咖啡哈~</h6>
+  <div id="qr" style="display: block;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/wechatpay.jpg" alt="TanKingKhun 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="/images/alipay.jpg" alt="TanKingKhun 支付宝">
+        <p>支付宝</p>
+      </div>
+  </div>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/JavaScript/" rel="tag"># JavaScript</a>
+              <a href="/tags/Axios/" rel="tag"># Axios</a>
+              <a href="/tags/%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB/" rel="tag"># 源码阅读</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2019/12/04/Axios%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB%E3%80%8C%E5%AE%9E%E7%8E%B0%E8%AF%B7%E6%B1%82%E7%9A%84%E5%8F%96%E6%B6%88%E4%B8%AD%E6%96%ADCancel%E3%80%8D/" rel="prev" title="Axios源码解读「实现请求的取消中断Cancel」">
+      <i class="fa fa-chevron-left"></i> Axios源码解读「实现请求的取消中断Cancel」
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2019/12/04/Axios%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB%E3%80%8C%E6%A0%B8%E5%BF%83%E9%80%BB%E8%BE%91%E9%83%A8%E5%88%86Core%E3%80%8D/" rel="next" title="Axios源码解读「核心逻辑部分Core」">
+      Axios源码解读「核心逻辑部分Core」 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#1-代码文件总体结构图"><span class="nav-text">1. 代码文件总体结构图</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-适配器相关文件-lib-adapters"><span class="nav-text">2. 适配器相关文件 (lib&#x2F;adapters)</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#3-取消、中断请求-lib-cancel"><span class="nav-text">3. 取消、中断请求 (lib&#x2F;cancel)</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#4-核心部分-lib-core"><span class="nav-text">4. 核心部分 (lib&#x2F;core)</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#5-帮助函数-lib-helpers"><span class="nav-text">5. 帮助函数 (lib&#x2F;helpers)</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#6-通用方法-lib-utils-js"><span class="nav-text">6. 通用方法 (lib&#x2F;utils.js)</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#7-默认配置-lib-default-js"><span class="nav-text">7. 默认配置 (lib&#x2F;default.js)</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#8-Axios全局API-lib-axios-js"><span class="nav-text">8. Axios全局API (lib&#x2F;axios.js)</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#文档链接："><span class="nav-text">文档链接：</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="TanKingKhun"
+      src="https://avatars.githubusercontent.com/u/14145521?v=4">
+  <p class="site-author-name" itemprop="name">TanKingKhun</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">30</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">32</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/chenjk110" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;chenjk110" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:chenjk110@qq.com" title="E-Mail → mailto:chenjk110@qq.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      Links
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="http://www.wangjianfeng.net/" title="http:&#x2F;&#x2F;www.wangjianfeng.net&#x2F;" rel="noopener" target="_blank">YouSeeSeeMe</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://www.fidding.me/" title="http:&#x2F;&#x2F;www.fidding.me&#x2F;" rel="noopener" target="_blank">Fidding</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://zhujp.net/" title="http:&#x2F;&#x2F;zhujp.net&#x2F;" rel="noopener" target="_blank">Venus</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://toad.dev/" title="https:&#x2F;&#x2F;toad.dev&#x2F;" rel="noopener" target="_blank">Toad.Woo</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">TanKingKhun</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/theme-next/theme-next-pjax@0/pjax.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/velocity/1.2.1/velocity.min.js"></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/velocity/1.2.1/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+  <script>
+var pjax = new Pjax({
+  selectors: [
+    'head title',
+    '#page-configurations',
+    '.content-wrap',
+    '.post-toc-wrap',
+    '.languages',
+    '#pjax'
+  ],
+  switches: {
+    '.post-toc-wrap': Pjax.switches.innerHTML
+  },
+  analytics: false,
+  cacheBust: false,
+  scrollTo : !CONFIG.bookmark.enable
+});
+
+window.addEventListener('pjax:success', () => {
+  document.querySelectorAll('script[data-pjax], script#page-configurations, #pjax script').forEach(element => {
+    var code = element.text || element.textContent || element.innerHTML || '';
+    var parent = element.parentNode;
+    parent.removeChild(element);
+    var script = document.createElement('script');
+    if (element.id) {
+      script.id = element.id;
+    }
+    if (element.className) {
+      script.className = element.className;
+    }
+    if (element.type) {
+      script.type = element.type;
+    }
+    if (element.src) {
+      script.src = element.src;
+      // Force synchronous loading of peripheral JS.
+      script.async = false;
+    }
+    if (element.dataset.pjax !== undefined) {
+      script.dataset.pjax = '';
+    }
+    if (code !== '') {
+      script.appendChild(document.createTextNode(code));
+    }
+    parent.appendChild(script);
+  });
+  NexT.boot.refresh();
+  // Define Motion Sequence & Bootstrap Motion.
+  if (CONFIG.motion.enable) {
+    NexT.motion.integrator
+      .init()
+      .add(NexT.motion.middleWares.subMenu)
+      .add(NexT.motion.middleWares.postList)
+      .bootstrap();
+  }
+  NexT.utils.updateSidebarPosition();
+});
+</script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script data-pjax>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdnjs.cloudflare.com/ajax/libs/mermaid/8.4.8/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme    : 'forest',
+      logLevel : 3,
+      flowchart: { curve     : 'linear' },
+      gantt    : { axisFormat: '%m/%d/%Y' },
+      sequence : { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+    <div id="pjax">
+  
+
+  
+
+    </div>
+</body>
+</html>

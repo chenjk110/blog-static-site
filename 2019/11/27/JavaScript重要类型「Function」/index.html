@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"blog.dymox.top","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":true,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="1. 函数的类型首先来了解下JavaScript中到目前标准为止都有哪些函数：  普通具名函数 普通匿名函数 生成器函数 箭头函数 异步函数  1.1 普通具名函数普通具名函数的通用结构形式： 1function [函数名] (参数1, 参数2, ..., 参数255) &amp;#123; [语句] &amp;#125;  通常我们在使用一个函数时候，需要定义一个函数，普通具名函数通过function关键字进行">
+<meta property="og:type" content="article">
+<meta property="og:title" content="JavaScript重要类型「Function」">
+<meta property="og:url" content="https://blog.dymox.top/2019/11/27/JavaScript%E9%87%8D%E8%A6%81%E7%B1%BB%E5%9E%8B%E3%80%8CFunction%E3%80%8D/index.html">
+<meta property="og:site_name" content="TanKingKhun&#39;s Blog">
+<meta property="og:description" content="1. 函数的类型首先来了解下JavaScript中到目前标准为止都有哪些函数：  普通具名函数 普通匿名函数 生成器函数 箭头函数 异步函数  1.1 普通具名函数普通具名函数的通用结构形式： 1function [函数名] (参数1, 参数2, ..., 参数255) &amp;#123; [语句] &amp;#125;  通常我们在使用一个函数时候，需要定义一个函数，普通具名函数通过function关键字进行">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2019-11-27T13:41:25.000Z">
+<meta property="article:modified_time" content="2021-06-26T11:40:14.444Z">
+<meta property="article:author" content="TanKingKhun">
+<meta property="article:tag" content="JavaScript">
+<meta property="article:tag" content="JS函数">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://blog.dymox.top/2019/11/27/JavaScript%E9%87%8D%E8%A6%81%E7%B1%BB%E5%9E%8B%E3%80%8CFunction%E3%80%8D/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>JavaScript重要类型「Function」 | TanKingKhun's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">TanKingKhun's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.dymox.top/2019/11/27/JavaScript%E9%87%8D%E8%A6%81%E7%B1%BB%E5%9E%8B%E3%80%8CFunction%E3%80%8D/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://avatars.githubusercontent.com/u/14145521?v=4">
+      <meta itemprop="name" content="TanKingKhun">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="TanKingKhun's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          JavaScript重要类型「Function」
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-11-27 21:41:25" itemprop="dateCreated datePublished" datetime="2019-11-27T21:41:25+08:00">2019-11-27</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-06-26 19:40:14" itemprop="dateModified" datetime="2021-06-26T19:40:14+08:00">2021-06-26</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="1-函数的类型"><a href="#1-函数的类型" class="headerlink" title="1. 函数的类型"></a>1. 函数的类型</h1><p>首先来了解下JavaScript中到目前标准为止都有哪些函数：</p>
+<ul>
+<li>普通具名函数</li>
+<li>普通匿名函数</li>
+<li>生成器函数</li>
+<li>箭头函数</li>
+<li>异步函数</li>
+</ul>
+<h2 id="1-1-普通具名函数"><a href="#1-1-普通具名函数" class="headerlink" title="1.1 普通具名函数"></a>1.1 普通具名函数</h2><p>普通具名函数的通用结构形式：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">function [函数名] (参数1, 参数2, ..., 参数255) &#123; [语句] &#125;</span><br></pre></td></tr></table></figure>
+
+<p>通常我们在使用一个函数时候，需要定义一个函数，普通具名函数通过function关键字进行定义函数，例如：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">hello</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="comment">// ...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>以上我们定义的了一个名称为<code>name</code>的函数，该方式定义的函数具有变量提升特性，也就是说，在当前作用域下，可以在定义之前进行调用，例如：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">hello() <span class="comment">// 可以在定义之前调用：'hello'</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// ...</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">hello</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">'hello'</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>除了以上定义的方式，也可以进行直接量定义，例如：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> hello = <span class="function"><span class="keyword">function</span> <span class="title">hello</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="comment">// ...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>直接量的定义方式，则不允许在定义赋值完成前进行调用，这个其实与变量定义提升规则一样，具体可以参考变量提升。例如：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">a() <span class="comment">// 在定义前进行调用，发生错误</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> a = <span class="function"><span class="keyword">function</span> <span class="title">name</span> (<span class="params"></span>) </span>&#123; &#125;</span><br><span class="line"></span><br><span class="line">a() <span class="comment">// 正常调用</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>Tips - 关于变量提升</strong></p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 原始代码</span></span><br><span class="line"><span class="built_in">console</span>.log(a) <span class="comment">// -&gt; undefined</span></span><br><span class="line"><span class="keyword">var</span> a = <span class="string">'hello'</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 具体的实现为</span></span><br><span class="line"><span class="keyword">var</span> a <span class="comment">// a的定义已经提升到最前面</span></span><br><span class="line"></span><br><span class="line"><span class="built_in">console</span>.log(a) <span class="comment">// a已经定义，但未初始化，所以此时为undefined</span></span><br><span class="line"></span><br><span class="line">a = <span class="string">'hello'</span> <span class="comment">// a完成初始化</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 之后对a进行访问则能获得其值 -&gt; "hello"</span></span><br></pre></td></tr></table></figure>
+
+<p>在直接量定义时候，函数名可以省了，因为对于直接量定义时候，函数名只具有在该语句的作用域可获得，此时的作用域则限定在定义的函数里，若有具体引用需求则可以附加函数名，否则通常是以匿名函数形式进行定义，例如：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> a = <span class="function"><span class="keyword">function</span> <span class="title">name</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="comment">// 在函数作用域内可以获得name函数，函数体外作用域则无法获得name函数</span></span><br><span class="line">  <span class="built_in">console</span>.log(name) <span class="comment">// 则打印此函数</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="built_in">console</span>.log(name) <span class="comment">// 此处无法获得name函数，发生错误</span></span><br><span class="line"></span><br><span class="line">a() <span class="comment">// 若要调用name则使用a变量</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 匿名函数方式</span></span><br><span class="line"><span class="keyword">const</span> b = <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="1-2-匿名函数"><a href="#1-2-匿名函数" class="headerlink" title="1.2 匿名函数"></a>1.2 匿名函数</h2><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> (<span class="params">参数<span class="number">1</span>, 参数<span class="number">2</span>, ..., 参数<span class="number">255</span></span>) </span>&#123; [语句] &#125;</span><br></pre></td></tr></table></figure>
+
+<p>匿名函数必须通过直接量进行定义或者自行函数(IIFE)，无法使用像具名函数那样直接定义，例如：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;&#125; <span class="comment">// 发生错误，必须要有函数名</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> a = <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;&#125; <span class="comment">// 正常初始化</span></span><br><span class="line"></span><br><span class="line">(<span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;&#125;) <span class="comment">// 正常执行语句、返回funciton直接量</span></span><br><span class="line"></span><br><span class="line">(<span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;&#125;)() <span class="comment">// 完成调用，实现自行</span></span><br></pre></td></tr></table></figure>
+
+<p>通常我们用匿名函数来做直接量的赋值操作，例如为对象属性进行赋值：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> person = &#123;</span><br><span class="line">  <span class="comment">/* speak 被定义为一个函数 */</span></span><br><span class="line">  speak: <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">    <span class="comment">// ...</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">person.walk = <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;&#125; <span class="comment">// 另一种赋值</span></span><br></pre></td></tr></table></figure>
+
+<p>或者是使用IIFE来实现作用域隔离：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 自行实现函数隔离作变量作用域</span></span><br><span class="line"><span class="keyword">const</span> result = (<span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="keyword">var</span> id = <span class="built_in">Math</span>.random().toString(<span class="number">16</span>).slice(<span class="number">3</span>, <span class="number">-1</span>)</span><br><span class="line">  <span class="keyword">var</span> frameKey = <span class="string">'UID'</span></span><br><span class="line">  <span class="keyword">return</span> frameKey + <span class="string">':'</span> + id</span><br><span class="line">&#125;)()</span><br><span class="line"></span><br><span class="line"><span class="comment">// result -&gt; 为随机的序列</span></span><br></pre></td></tr></table></figure>
+
+<p>对于回调函数的使用：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> box = <span class="built_in">document</span>.getElementById(<span class="string">'box'</span>)</span><br><span class="line">box.addEventListener(<span class="string">'click'</span>, <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">'click box!'</span>)</span><br><span class="line">&#125;, <span class="literal">false</span>)</span><br></pre></td></tr></table></figure>
+
+<p>可以看出，由于JavaScript的灵活，我们可以在使用函数的地方完全可以不用提前声明，直接利用匿名函数可以使编码更加简便。</p>
+<h2 id="1-3-箭头函数"><a href="#1-3-箭头函数" class="headerlink" title="1.3 箭头函数"></a>1.3 箭头函数</h2><p>在ES6标准中，增加了箭头函数类型，这种函数除了简便书写外，最主要的特性是自动绑定上下文，这个特性可以在连续使用箭头函数时候直接传递上下文this，对于上下文内容后文将会提到，首先来看下如何书写一个箭头函数：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">(参数<span class="number">1</span>, 参数<span class="number">2</span>, ..., 参数<span class="number">255</span>) =&gt; &#123; 语句 &#125;</span><br><span class="line"><span class="comment">// 或者</span></span><br><span class="line">参数<span class="number">1</span> =&gt; 表达式</span><br></pre></td></tr></table></figure>
+
+<p>箭头函数的定义和普通函数定义方式不一样，箭头函数的定义是直接量的，不能像普通函数那样声明：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 普通函数声明</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">name</span>(<span class="params"></span>) </span>&#123;&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 箭头函数声明</span></span><br><span class="line"><span class="keyword">const</span> hello = <span class="function"><span class="params">()</span> =&gt;</span> &#123;&#125;</span><br></pre></td></tr></table></figure>
+
+<p>我们来看下箭头函数和普通函数的对比：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 普通函数 `sum`</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">sum</span>(<span class="params">a, b</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">return</span> a + b</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 箭头函数 `sum`</span></span><br><span class="line"><span class="keyword">const</span> sum = <span class="function">(<span class="params">a, b</span>) =&gt;</span> a + b</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">// 普通函数 `fn1`</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">fn1</span>(<span class="params">n</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">return</span> n + <span class="number">1</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 箭头函数 `fn1`</span></span><br><span class="line"><span class="keyword">const</span> fn1 = <span class="function"><span class="params">n</span> =&gt;</span> n + <span class="number">1</span></span><br></pre></td></tr></table></figure>
+
+<p>使用箭头函数来实现高阶函数的嵌套是非常方便的，例如：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 普通函数的高阶</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">add</span>(<span class="params">a</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">return</span> <span class="function"><span class="keyword">function</span> (<span class="params">b</span>) </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="function"><span class="keyword">function</span> (<span class="params">c</span>) </span>&#123;</span><br><span class="line">      <span class="keyword">return</span> a + b + c</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">add(<span class="number">1</span>)(<span class="number">2</span>)(<span class="number">3</span>) <span class="comment">// -&gt; 6</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 箭头函数的使用</span></span><br><span class="line"><span class="keyword">const</span> add = <span class="function"><span class="params">a</span> =&gt;</span> <span class="function"><span class="params">b</span> =&gt;</span> <span class="function"><span class="params">c</span> =&gt;</span> a + b + c <span class="comment">// 一行即可实现</span></span><br></pre></td></tr></table></figure>
+
+<p>对于箭头函数的两个有点：</p>
+<ul>
+<li><p>书写简便</p>
+</li>
+<li><p>上下文自动绑定</p>
+</li>
+</ul>
+<p>这两个特性足够让我们经常使用它。</p>
+<h2 id="1-4-生成器函数"><a href="#1-4-生成器函数" class="headerlink" title="1.4 生成器函数"></a>1.4 生成器函数</h2><figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">function* [名称](参数1, 参数2, ..., 参数255) &#123; [语句] &#125;</span><br></pre></td></tr></table></figure>
+
+<p>Generator函数是作为迭代生成器的一种特殊函数，通过关键字<code>yield</code>来定义每一步迭代关键步骤。通常使用迭代器，我们可以更方便地按顺序去访问一个数组，我们先用普通函数实现一个简单的迭代器：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">createIterator</span>(<span class="params">values</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">let</span> _value = <span class="literal">undefined</span>, _done = <span class="literal">false</span></span><br><span class="line">  </span><br><span class="line">  <span class="function"><span class="keyword">function</span> <span class="title">next</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (_done) <span class="keyword">return</span> &#123; <span class="attr">value</span>: <span class="literal">undefined</span>, <span class="attr">done</span>: <span class="literal">true</span> &#125;</span><br><span class="line">    _done = !values.length</span><br><span class="line">    _value = values.shift()</span><br><span class="line">    <span class="keyword">return</span> &#123; <span class="attr">value</span>: _value, <span class="attr">done</span>: _done &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  </span><br><span class="line">  <span class="keyword">return</span> &#123; next &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> list = [<span class="string">'apple'</span>, <span class="string">'orange'</span>, <span class="string">'banana'</span>]</span><br><span class="line"><span class="keyword">const</span> it = createIterator(list)</span><br><span class="line"></span><br><span class="line">it.next() <span class="comment">// -&gt; &#123;value: "apple", done: false&#125;</span></span><br><span class="line">it.next() <span class="comment">// -&gt; &#123;value: "orange", done: false&#125;</span></span><br><span class="line">it.next() <span class="comment">// -&gt; &#123;value: "banana", done: false&#125; 到达最后一个值</span></span><br><span class="line">it.next() <span class="comment">// -&gt; &#123;value: undefined, done: true&#125; 已经完成迭代</span></span><br></pre></td></tr></table></figure>
+
+<p>从上面可看出，我们每次调用<code>it.next()</code>, 数组的访问指针就会移动一格，并且返回本次迭代对应的值以及当前迭代器的状态，访问流程可以按需的去进行，灵活方便。对于原生的Generator函数，则用也一致，并且具有更多的灵活性和不同的定义方式，我们来看下原生Generator函数基本使用方式：</p>
+<ul>
+<li>yield 关键字定义迭代输出标志</li>
+</ul>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span>* <span class="title">createFruitIt</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="keyword">yield</span> <span class="string">'apple'</span></span><br><span class="line">  <span class="keyword">yield</span> <span class="string">'orange'</span></span><br><span class="line">  <span class="keyword">yield</span> <span class="string">'banana'</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> it = createFruitIt()</span><br><span class="line"></span><br><span class="line">it.next() <span class="comment">// -&gt; &#123;value: "apple", done: false&#125;</span></span><br><span class="line">it.next() <span class="comment">// -&gt; &#123;value: "orange", done: false&#125;</span></span><br><span class="line">it.next() <span class="comment">// -&gt; &#123;value: "banana", done: false&#125;</span></span><br><span class="line">it.next() <span class="comment">// -&gt; &#123;value: undefined, done: true&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>原生generator函数需要使用关键字<code>yield</code>定义每次迭代的输出值，我们也可以穿入数组来进行迭代：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span>* <span class="title">createIterator</span>(<span class="params">list</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">for</span> (<span class="keyword">let</span> i = <span class="number">0</span>; i &lt; list.length; i++) &#123;</span><br><span class="line">    <span class="keyword">yield</span> list[i]</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// or</span></span><br><span class="line"><span class="function"><span class="keyword">function</span>* <span class="title">createIterator</span>(<span class="params">list</span>) </span>&#123;</span><br><span class="line">  list.forEach(<span class="function"><span class="params">value</span> =&gt;</span> <span class="keyword">yield</span> value)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><code>next()</code> 方法执行下一次迭代，若在执行时候传入值，则将值赋予上一次迭代的<code>yield</code>关键字左侧</li>
+</ul>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span>* <span class="title">gen</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="keyword">yield</span> <span class="number">1</span></span><br><span class="line">  <span class="keyword">const</span> x = <span class="keyword">yield</span> <span class="number">2</span></span><br><span class="line">  <span class="keyword">yield</span> x</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> it = gen()</span><br><span class="line">it.next() <span class="comment">// &#123; value: 1, done: false &#125;</span></span><br><span class="line">it.next() <span class="comment">// &#123; value: 2, done: false &#125;</span></span><br><span class="line">it.next(<span class="number">-1</span>) <span class="comment">// &#123; value: -1, done: false &#125;</span></span><br><span class="line">it.next() <span class="comment">// &#123; value: undefined, done: true &#125;</span></span><br></pre></td></tr></table></figure>
+
+<ol>
+<li><p>调用<code>next()</code>，输出第一个<code>yield</code>关键字右值，输出为1，并在此阻塞`</p>
+</li>
+<li><p>调用<code>next()</code>，继续执行，输出第二个<code>yield</code>关键字右值，输出2，并在此阻塞，且此时<code>x</code>等待下次<code>next()</code>传入的值</p>
+</li>
+<li><p>调用<code>next(-1)</code>，继续执行，输入第三个<code>yield</code>关键字右值，输出-1， 由于这次调用传入了值<code>-1</code>，则会赋值到第二步中<code>yield</code>关键字左值，所以本次迭代实质执行了逻辑为：</p>
+</li>
+</ol>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> x = <span class="number">-1</span></span><br><span class="line"><span class="keyword">yield</span> x <span class="comment">// -&gt; -1</span></span><br></pre></td></tr></table></figure>
+
+<ol start="4">
+<li>调用 <code>next()</code>，结束迭代，<code>done: false</code>，<code>value: undefined</code></li>
+</ol>
+<p>可以看出每次迭代的顺序及逻辑都是以<code>yield</code>为分界点，<code>yield</code>右侧定义了本次迭代的输出，左侧则为下次迭代的输入，流程类似一条<code>S</code>形绳子，每个<code>yield</code>类似绳子打的结，顺着绳子开端捋过去，则会在绳结处卡住，相当于阻塞；过一个绳结，继续捋，相当于下一次迭；直到手碰到下一个绳结，意味着当次迭代完成；用一下代码做一下简单事例：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span>* <span class="title">gen</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="comment">/* a.开始位置 */</span></span><br><span class="line">  </span><br><span class="line">  <span class="comment">/* a. &gt;&gt;&gt; 执行代码 &gt;&gt;&gt; b. */</span></span><br><span class="line">                                           </span><br><span class="line">  <span class="comment">/* c.[下次迭代的输入] &lt;&lt;&lt; */</span> <span class="keyword">yield</span> <span class="number">0</span> <span class="comment">/* &lt;在此阻塞&gt; &lt;&lt;&lt; [本次迭代输出] &lt;&lt;&lt; b. */</span></span><br><span class="line"></span><br><span class="line">  <span class="comment">/* c. &gt;&gt;&gt; 执行代码 &gt;&gt;&gt; d. */</span></span><br><span class="line">  </span><br><span class="line">  <span class="comment">/* e. &lt;&lt;&lt; [下次迭代的输入] &lt;&lt;&lt; */</span> <span class="keyword">yield</span> <span class="number">1</span> <span class="comment">/* d. &lt;在此阻塞&gt; &lt;&lt;&lt; [本次迭代输出] d. */</span></span><br><span class="line">  </span><br><span class="line">  <span class="comment">// ...</span></span><br><span class="line">  </span><br><span class="line">  <span class="comment">/* e. &gt;&gt;&gt; 最后一次迭代执行代码 &gt;&gt;&gt; 结束 */</span></span><br><span class="line">  </span><br><span class="line">  <span class="comment">/* e.结束位置 */</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>对于<code>yield</code>的右值可以是普通的数据，也可以是一个Generator生成器，形成嵌套组合，著名的<code>co</code>库就是利用这种方法实现一部迭代嵌套，后文将提及的<code>AsyncFunction</code>作用与此异曲同工，我们先来利用<code>Generator</code>体验一下：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span>* <span class="title">serialize</span>(<span class="params">n</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">let</span> i = <span class="number">0</span></span><br><span class="line">  <span class="keyword">while</span>(i &lt; n) &#123;</span><br><span class="line">    <span class="keyword">yield</span> i++</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span>* <span class="title">print</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="keyword">yield</span>* serialize(<span class="number">3</span>) <span class="comment">// 利用yield* 移交控制权</span></span><br><span class="line">  <span class="keyword">yield</span>* serialize(<span class="number">5</span>) <span class="comment">// 利用yield* 移交控制权</span></span><br><span class="line">  <span class="keyword">yield</span> <span class="string">'done'</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> p = print()</span><br><span class="line"><span class="keyword">let</span> val</span><br><span class="line"></span><br><span class="line"><span class="keyword">while</span>(val = p.next(), !val.done) &#123;</span><br><span class="line">  <span class="built_in">console</span>.log(val)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* 输出 */</span></span><br><span class="line"><span class="comment">/* &#123; value: 0, done: false &#125; */</span></span><br><span class="line"><span class="comment">/* &#123; value: 1, done: false &#125; */</span></span><br><span class="line"><span class="comment">/* &#123; value: 2, done: false &#125; */</span></span><br><span class="line"><span class="comment">/* &#123; value: 0, done: false &#125; */</span></span><br><span class="line"><span class="comment">/* &#123; value: 1, done: false &#125; */</span></span><br><span class="line"><span class="comment">/* &#123; value: 2, done: false &#125; */</span></span><br><span class="line"><span class="comment">/* &#123; value: 3, done: false &#125; */</span></span><br><span class="line"><span class="comment">/* &#123; value: 4, done: false &#125; */</span></span><br><span class="line"><span class="comment">/* &#123; value: 'done', done: false &#125; */</span></span><br></pre></td></tr></table></figure>
+
+<p>利用<code>yield*</code>关键字可以将当前迭代器的控制权交予右边迭代器，当下一次迭代时候，则进入该子迭代器继续，完成子迭代器的迭代后，则交还控制权，继续当前迭代，利用这种特性我们可以使用多层嵌套迭代器来实现栈相似功能，从而实现异步回调的嵌套。</p>
+<p>在<code>generator</code>函数中，若中途<code>return</code>则将会改变迭代器的状态为完成状态，即<code>done: true</code>，<code>return</code>语句之后的<code>yield</code>关键字则被忽略，例如：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span>* <span class="title">gen</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="keyword">yield</span> <span class="number">1</span></span><br><span class="line">  <span class="keyword">yield</span> <span class="number">2</span></span><br><span class="line">  <span class="keyword">return</span> <span class="number">-1</span></span><br><span class="line">  <span class="keyword">yield</span> <span class="number">3</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在执行两次的<code>next()</code>后，第三次迭代会直接返回<code>-1</code>，从而第三个<code>yield</code>则无效，从<code>value</code>的值从而被替换成<code>-1</code>：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> it = gen()</span><br><span class="line">it.next() <span class="comment">// &#123; value: 1, done: false &#125;</span></span><br><span class="line">it.next() <span class="comment">// &#123; value: 2, done: false &#125;</span></span><br><span class="line">it.next() <span class="comment">// &#123; value: -1, done: true &#125;</span></span><br><span class="line">it.next() <span class="comment">// &#123; value: undefined, done: true &#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>当我们在获得了需要的值时候，之后的迭代则没有意义了，有了这个机制，可以让我们灵活从函数内部去控制在何时结束迭代。但这种方式仅限于一开始函数定义时固定的控制流程，当我们在外部使用迭代器的时候，有时需要随时结束迭代，以方便我们的具体需求，<code>Generator</code>函数定义了一个原型方法<code>return()</code>，该方法与内部的<code>return</code>关键字作用相同，也是改变迭代器的状态以及将传入的值作为结果值的<code>value</code>, 如：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span>* <span class="title">nums</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="keyword">let</span> i = <span class="number">0</span></span><br><span class="line">  <span class="keyword">while</span>(<span class="literal">true</span>) &#123;</span><br><span class="line">    <span class="keyword">yield</span> i++</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">it = nums()</span><br><span class="line"></span><br><span class="line">it.next() <span class="comment">// &#123;value: 0, done: false&#125;</span></span><br><span class="line">it.next() <span class="comment">// &#123;value: 1, done: false&#125;</span></span><br><span class="line"><span class="comment">// ...</span></span><br><span class="line">it.next() <span class="comment">// &#123;value: 9, done: false&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>在迭代返回值的<code>value</code>为9时候，下一次迭代则为10，我们利用<code>return()</code>方法替代<code>next()</code>方法完成下一次迭代，从而结束迭代， 若继续调用<code>next()</code>则会发现迭代器已经是结束状态：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">it.return(<span class="number">10</span>) <span class="comment">// &#123;value: 10, done: true&#125;</span></span><br><span class="line">it.next() <span class="comment">// &#123;value: undefined, done: true &#125;</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p>在迭代器的异常处理中，同样的也提供了一个<code>throw()</code>方法，这个方法可以在外部人为干预地让迭代器抛出异常，调用时传入一个错误实例，如：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span>* <span class="title">gen</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="keyword">while</span>(<span class="literal">true</span>) &#123;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">       <span class="keyword">yield</span> <span class="number">42</span>;</span><br><span class="line">    &#125; <span class="keyword">catch</span>(e) &#123;</span><br><span class="line">      <span class="built_in">console</span>.log(<span class="string">"Error caught!"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> g = gen();</span><br><span class="line">g.next(); <span class="comment">// &#123; value: 42, done: false &#125;</span></span><br><span class="line">g.throw(<span class="keyword">new</span> <span class="built_in">Error</span>(<span class="string">"Something went wrong"</span>)); <span class="comment">// "Error caught!"</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="1-5-异步函数"><a href="#1-5-异步函数" class="headerlink" title="1.5 异步函数"></a>1.5 异步函数</h2><p>异步函数可以看作是普通函数的异步增强，提供了<code>await</code>关键字，与Promise结合可以简便异步流程控制，提高异步链式回调的可读性，首先来看下如何定义一个异步函数：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">async</span> <span class="function"><span class="keyword">function</span> <span class="title">name</span> (<span class="params">参数<span class="number">1</span>, ..., 参数N</span>) </span>&#123; <span class="comment">/* 代码 */</span> &#125;</span><br><span class="line"><span class="comment">// or</span></span><br><span class="line"><span class="keyword">async</span> (参数<span class="number">1</span>, ..., 参数N) =&gt; &#123; <span class="comment">/* 代码 */</span> &#125;</span><br></pre></td></tr></table></figure>
+<p>定一个一个异步函数与普通函数大致相同，需要使用<code>async</code>关键字，异步函数的返回值总会是一个<code>Promise</code>实例，这个与普通函数不同：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">fn1</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="keyword">return</span> <span class="string">'hello'</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">async</span> <span class="function"><span class="keyword">function</span> <span class="title">fn2</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="keyword">return</span> <span class="string">'world'</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="built_in">console</span>.log(fn1()) <span class="comment">// 'hello'</span></span><br><span class="line"><span class="built_in">console</span>.log(fn2()) <span class="comment">// Promise &#123;&lt;resolved&gt;: "world"&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>在异步函数执行后，由于返回的是Proimse实例，我们可以像操作Promise那样进行如<code>then</code>、<code>catch</code>等链式操作：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">async</span> <span class="function"><span class="keyword">function</span> <span class="title">fn1</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">   <span class="keyword">return</span> <span class="string">'hello world'</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">fn1().then(<span class="function"><span class="keyword">function</span> (<span class="params">res</span>) </span>&#123;</span><br><span class="line">  <span class="built_in">console</span>.log(res) <span class="comment">// 'hello world'</span></span><br><span class="line">  <span class="keyword">throw</span> <span class="keyword">new</span> <span class="built_in">Error</span>(<span class="string">'Boom!'</span>)</span><br><span class="line">&#125;).catch(<span class="function"><span class="keyword">function</span> (<span class="params">err</span>) </span>&#123;</span><br><span class="line">  <span class="built_in">console</span>.log(err.message) <span class="comment">// 'Boom!'</span></span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<h3 id="1-5-1-异步函数返回的Promise状态"><a href="#1-5-1-异步函数返回的Promise状态" class="headerlink" title="1.5.1 异步函数返回的Promise状态"></a>1.5.1 异步函数返回的Promise状态</h3><p>我们知道Promise核心的有两个状态：<code>resolved</code>、<code>rejected</code>，那么在什么情况下会返回对应的这两种状态的Promise，我们来看下：</p>
+<p><strong>resolved:</strong></p>
+<ul>
+<li>返回任何正常值（不return返回值默认为undefined）</li>
+<li>返回Proimse.resove()</li>
+</ul>
+<p><strong>rejected:</strong></p>
+<ul>
+<li>抛出异常</li>
+<li>返回Promise.reject()</li>
+</ul>
+<h4 id="返回resolved状态"><a href="#返回resolved状态" class="headerlink" title="返回resolved状态:"></a>返回<code>resolved</code>状态:</h4><p>1.返回正常值：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> f1 = <span class="keyword">async</span> val =&gt; val</span><br><span class="line"></span><br><span class="line"><span class="built_in">console</span>.log(f1(<span class="string">'abc'</span>)) <span class="comment">// -&gt; Promise &#123;&lt;resolved&gt;: "abc"&#125;</span></span><br><span class="line"></span><br><span class="line"><span class="built_in">console</span>.log(f1(<span class="literal">true</span>)) <span class="comment">// -&gt; Promise &#123;&lt;resolved&gt;: true&#125;</span></span><br><span class="line"></span><br><span class="line"><span class="built_in">console</span>.log(f1(<span class="number">0</span>)) <span class="comment">// -&gt; Promise &#123;&lt;resolved&gt;: 0&#125;</span></span><br><span class="line"></span><br><span class="line"><span class="built_in">console</span>.log(f1(&#123;&#125;)) <span class="comment">// -&gt; Promise &#123;&lt;resolved&gt;: &#123;&#125;&#125;</span></span><br><span class="line"></span><br><span class="line"><span class="built_in">console</span>.log(f1([])) <span class="comment">// -&gt; Promise &#123;&lt;resolved&gt;: []&#125;</span></span><br><span class="line"></span><br><span class="line"><span class="built_in">console</span>.log(f1(<span class="function"><span class="params">()</span> =&gt;</span> &#123;&#125;)) <span class="comment">// -&gt; Promise &#123;&lt;resolved&gt;: f&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>2.不返回</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> f1 = <span class="keyword">async</span> () =&gt; &#123;&#125;</span><br><span class="line"><span class="built_in">console</span>.log(f1()) <span class="comment">// -&gt; Promise &#123;&lt;resolved&gt;: undefined&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>3.返回错误</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> f1 = <span class="keyword">async</span> () =&gt; <span class="keyword">new</span> <span class="built_in">Error</span>(<span class="string">'Boom!'</span>)</span><br><span class="line"></span><br><span class="line"><span class="built_in">console</span>.log(f1())</span><br><span class="line"><span class="comment">// -&gt; Promise &#123;&lt;resolved&gt;: Error: Boom ...&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>4.返回<code>Promise.resove()</code></p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> f1 = <span class="keyword">async</span> () =&gt; <span class="built_in">Promise</span>.resolve(<span class="string">'done!!'</span>)</span><br><span class="line"><span class="built_in">console</span>.log(f1()) <span class="comment">// -&gt; Promise &#123;&lt;resolved&gt;: 'done'&#125;</span></span><br></pre></td></tr></table></figure>
+
+
+
+<h4 id="返回rejected状态"><a href="#返回rejected状态" class="headerlink" title="返回rejected状态:"></a>返回<code>rejected</code>状态:</h4><p>1.抛出异常</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> f1 = <span class="keyword">async</span> () =&gt; &#123; <span class="keyword">throw</span> <span class="keyword">new</span> <span class="built_in">Error</span>(<span class="string">'Something Wrong!'</span>) &#125;</span><br><span class="line"><span class="built_in">console</span>.log(f1()) <span class="comment">// -&gt; Promise &#123;&lt;rejected&gt;: Error: Something Wrong! ...&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>2.返回<code>Promise.reject()</code></p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> f1 = <span class="keyword">async</span> () =&gt; <span class="built_in">Promise</span>.reject(<span class="string">'No!'</span>)</span><br><span class="line"><span class="built_in">console</span>.log(f1()) <span class="comment">// -&gt;  Promise &#123;&lt;rejected&gt;: 'No!'&#125;</span></span><br></pre></td></tr></table></figure>
+
+
+
+<h4 id="返回状态总结："><a href="#返回状态总结：" class="headerlink" title="返回状态总结："></a>返回状态总结：</h4><p>所以可以知道，除了抛出异常与<code>Promise.reject()</code>实例的返回值状态为<code>rejected</code>，其余都是<code>resolved</code>状态</p>
+<h3 id="1-5-2-异步函数await关键字"><a href="#1-5-2-异步函数await关键字" class="headerlink" title="1.5.2 异步函数await关键字"></a>1.5.2 异步函数<code>await</code>关键字</h3><p>异步函数最大的一个特点就是能够将Promise异步请求像写同步函数那样串起来，利用<code>await</code>关键字实现异步等待，类似迭代器，这样可以方便异步流程的顺序执行，先来看下<code>await</code>的用法</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 定义延迟函数</span></span><br><span class="line"><span class="keyword">const</span> delay = <span class="function">(<span class="params">delay</span>) =&gt;</span> </span><br><span class="line">  <span class="keyword">new</span> <span class="built_in">Promise</span>(<span class="function"><span class="params">resolve</span> =&gt;</span> </span><br><span class="line">    setTimeout(<span class="function"><span class="params">()</span> =&gt;</span> &#123;</span><br><span class="line">      <span class="built_in">console</span>.log(<span class="string">`delayed: <span class="subst">$&#123;delay&#125;</span>ms`</span>)</span><br><span class="line">      resolve()</span><br><span class="line">    &#125;, delay)</span><br><span class="line">  )</span><br><span class="line"><span class="keyword">const</span> f1 = <span class="function"><span class="params">()</span> =&gt;</span> &#123;</span><br><span class="line">  delay(<span class="number">1000</span>)</span><br><span class="line">  delay(<span class="number">1000</span>)</span><br><span class="line">  delay(<span class="number">3000</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> f2 = <span class="keyword">async</span> () =&gt; &#123;</span><br><span class="line">  <span class="keyword">await</span> delay(<span class="number">1000</span>)</span><br><span class="line">  <span class="keyword">await</span> delay(<span class="number">1000</span>)</span><br><span class="line">  <span class="keyword">await</span> delay(<span class="number">3000</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">f1() <span class="comment">// 正常函数的执行</span></span><br></pre></td></tr></table></figure>
+<p>可以看出f1执行后，可以发现三个函数其实是独立执行的，并非按照顺序串联执行，全部执行完成总共耗时大约3秒。</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">f2() <span class="comment">// 异步函数的执行</span></span><br></pre></td></tr></table></figure>
+<p>f2执行后，可以发现三个延迟操作是安顺序执行的，即三个执行完总共耗时大约5秒，相对于f1，f2才符合我们delay需求。</p>
+<p>这个delay只是模拟异步的一个流程，而在实际开发中，串联异步流程的执行顺序是很重要的一个点，如果采用传统的回调或者Promise的链式回调方式也是可以，只是异步函数写法更加简便，阅读更加清晰，符合直观流程的阅读感受。</p>
+<h3 id="1-5-3-await关键字的左右值"><a href="#1-5-3-await关键字的左右值" class="headerlink" title="1.5.3 await关键字的左右值"></a>1.5.3 <code>await</code>关键字的左右值</h3><p>异步函数中使用<code>await</code>去做异步流程的等待，当<code>await</code>右边的Promise状态变为<code>resolved</code>时候，<code>await</code>关键字左边的值就变为<code>resolved</code>的值，当<code>await</code>右边的Promise状态改为<code>rejected</code>时，异步函数则会直接中断后续的<code>await</code>流程，直接返回<code>rejected</code>状态的Promise，用例子演示下：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> asyncFn = <span class="keyword">async</span> () =&gt; &#123;</span><br><span class="line">  <span class="keyword">const</span> valueA = <span class="keyword">await</span> <span class="built_in">Promise</span>.resolve(<span class="string">'A'</span>)</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">'first await: '</span> + valueA)</span><br><span class="line">  <span class="keyword">const</span> valueA2 = <span class="keyword">await</span> <span class="built_in">Promise</span>.resolve(valueA + valueA)</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">'second await: '</span> + valueA2)</span><br><span class="line">  </span><br><span class="line">  <span class="keyword">const</span> errValue = <span class="keyword">await</span> <span class="built_in">Promise</span>.reject(<span class="string">'err: '</span> + valueA2)</span><br><span class="line">  <span class="built_in">console</span>.log(errValue)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">asyncFn().catch(<span class="function"><span class="params">err</span> =&gt;</span> &#123;</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">'on catch -&gt; '</span> + err)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>以上代码执行后依此输出的结果为：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 'first await: A'</span></span><br><span class="line"><span class="comment">// 'second await: AA'</span></span><br><span class="line"><span class="comment">// 'on catch -&gt; err: AA'</span></span><br></pre></td></tr></table></figure>
+
+<p>可以发现，最后一次我们reject时候，<code>errValue</code>并未被打印，也就是在这个<code>await</code>流程时候由于Promise的状态是<code>rejected</code>，会直接返回而不走之后的异步流程了。在前面两个异步流程中，由于状态是<code>resolved</code>，我们可以获得其值，并传入到下一步<code>await</code>流程中去继续。得力于这种方式，使得我们能够以同步流程的方式来组织异步流程，使代码更具可读性。</p>
+<h1 id="2-函数的执行上下文this"><a href="#2-函数的执行上下文this" class="headerlink" title="2. 函数的执行上下文this"></a>2. 函数的执行上下文this</h1><p>函数的执行有个概念叫上下文，也就是this指针，在函数内部使用this可以获得上下文对象，由于JavaScript的灵活，同一个函数的执行，this往往并非都指向相同，先来了解下一个函数有哪几种改变上下文指向的执行方式：</p>
+<ul>
+<li>直接执行</li>
+<li>对象属性访问方式执行</li>
+<li>通过apply、call方式执行</li>
+<li>通过bind方式执行</li>
+</ul>
+<h2 id="2-1-直接执行的this指向"><a href="#2-1-直接执行的this指向" class="headerlink" title="2.1 直接执行的this指向"></a>2.1 直接执行的this指向</h2><p>一个函数完成定义初始化后，可以在可访问到的作用域中直接执行，这个时候执行的指向为全局对象, 浏览器为<code>window</code>的全局对象，Node.js中为<code>global</code>对象, 在严格模式下都为<code>undefined</code></p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">hello</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="keyword">this</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">hello() <span class="comment">// browser -&gt; window, Node.js -&gt; global</span></span><br><span class="line"></span><br><span class="line"><span class="meta">'use strict'</span></span><br><span class="line">hello() <span class="comment">// broswer -&gt; undefined, Node.js -&gt; undefined</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="2-2-对象属性访问执行的this指向"><a href="#2-2-对象属性访问执行的this指向" class="headerlink" title="2.2 对象属性访问执行的this指向"></a>2.2 对象属性访问执行的this指向</h2><p>若函数未通过显式地去绑定上下文，则通过访问对象属性方式执行，this指向就为该对象，我们先定义一个函数，然后分别将不同对象的属性指向到该函数，然后分别调用，看下结果：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">hello</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">`Hello, I'm <span class="subst">$&#123;<span class="keyword">this</span>.name&#125;</span>!`</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> a = &#123;</span><br><span class="line">  name: <span class="string">'a'</span>,</span><br><span class="line">  say: hello</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> b = &#123;</span><br><span class="line">  name: <span class="string">'b'</span>,</span><br><span class="line">  say: hello</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">a.say() <span class="comment">// -&gt; "Hello, I'm a"</span></span><br><span class="line">b.say() <span class="comment">// -&gt; "Hello, I'm b"</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 我们在新建一个对象c</span></span><br><span class="line"><span class="keyword">const</span> c = &#123;</span><br><span class="line">  name: <span class="string">'c'</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 将a.say赋值给c.say</span></span><br><span class="line">c.say = a.say</span><br><span class="line"></span><br><span class="line">c.say() <span class="comment">// -&gt; "Hello, I'm c"</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 最后我们在全局对象window定义一个name属性，直接调用hello方法</span></span><br><span class="line"><span class="built_in">window</span>.name = <span class="string">'God'</span></span><br><span class="line">hello() <span class="comment">// -&gt; "Hello, I'm God"</span></span><br></pre></td></tr></table></figure>
+
+<p>可以发现同一个函数作为不同对象的属性被调用时候，this的指向动态地指向该对象</p>
+<h2 id="2-3-通过apply、call方式执行"><a href="#2-3-通过apply、call方式执行" class="headerlink" title="2.3 通过apply、call方式执行"></a>2.3 通过apply、call方式执行</h2><p>函数的<code>apply</code>原型方法是实现调用函数时候，显式地传入上下文，并且参数可以通过数组的方式传入，此时函数执行时的<code>this</code>则指向传入的对象，<code>call</code>方法效果也是一样的，只是传入参数的方式为逗号隔开，也就是普通的传参方式，例如：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">hello</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="keyword">this</span>.name)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="built_in">window</span>.name = <span class="string">'God'</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> a = &#123; <span class="attr">name</span>: <span class="string">'a'</span> &#125;</span><br><span class="line"><span class="keyword">const</span> b = &#123; <span class="attr">name</span>: <span class="string">'b'</span> &#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* apply() */</span></span><br><span class="line">hello.apply(a) <span class="comment">// -&gt; 'a'</span></span><br><span class="line">hello.apply(b) <span class="comment">// -&gt; 'b'</span></span><br><span class="line"></span><br><span class="line">hello() <span class="comment">// -&gt; 'God'</span></span><br><span class="line"></span><br><span class="line"><span class="comment">/* call() */</span></span><br><span class="line">hello.call(a) <span class="comment">// -&gt; 'a'</span></span><br><span class="line">hello.call(b) <span class="comment">// -&gt; 'b'</span></span><br><span class="line"></span><br><span class="line">hello() <span class="comment">// -&gt; 'God'</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="2-4-通过bind方式执行"><a href="#2-4-通过bind方式执行" class="headerlink" title="2.4 通过bind方式执行"></a>2.4 通过bind方式执行</h2><p>函数的<code>bind</code>的原型方法能显式地将当前函数与传入的上下文对象进行绑定，返回绑定完成的函数，原始函数的上下文指向逻辑仍不变，而绑定生成的新函数则实现了上下文的永久绑定，无论使用任何方式去调用，都不会改变<code>this</code>指向，即使是再次使用<code>bind</code>，例如：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">hello</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="built_in">console</span>.log(<span class="string">`Hello, I'm <span class="subst">$&#123;<span class="keyword">this</span>.name&#125;</span>`</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="built_in">window</span>.name = <span class="string">'SuperHero'</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> jack = &#123; <span class="attr">name</span>: <span class="string">'Jack'</span> &#125;</span><br><span class="line"><span class="keyword">const</span> mary = &#123; <span class="attr">name</span>: <span class="string">'Mary'</span> &#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> helloSuperHero = hello.bind(<span class="built_in">window</span>)</span><br><span class="line"><span class="keyword">const</span> helloJack = hello.bind(jack)</span><br><span class="line"></span><br><span class="line">helloSuperHero() <span class="comment">// -&gt; 'Hello, I'm SuperHero'</span></span><br><span class="line">helloJack() <span class="comment">// -&gt; 'Hello, I'm Jack'</span></span><br><span class="line"></span><br><span class="line">helloSuperHero.call(jack) <span class="comment">// -&gt; 'Hello, I'm SuperHero'</span></span><br><span class="line">helloJack.apply(<span class="built_in">window</span>) <span class="comment">// -&gt; 'Hello, I'm Jack'</span></span><br><span class="line">helloJack.apply(mary) <span class="comment">// -&gt; 'Hello, I'm Jack'</span></span><br><span class="line"></span><br><span class="line">hello.call(jack) <span class="comment">// -&gt; 'Hello, I'm Jack'</span></span><br><span class="line">hello.call(mary) <span class="comment">// -&gt; 'Hello, I'm Mary'</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> helloMary = helloJack.bind(mary) <span class="comment">// this的指向更改将不会生效</span></span><br><span class="line"><span class="keyword">const</span> marySayHello = hello.bind(mary) <span class="comment">// this的指向更改生效</span></span><br><span class="line"></span><br><span class="line">helloMary() <span class="comment">// -&gt; 'Hello, I'm Jack'</span></span><br><span class="line">marySayHello <span class="comment">// -&gt; 'Hello, I'm Mary'</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="2-5-箭头函数的this"><a href="#2-5-箭头函数的this" class="headerlink" title="2.5 箭头函数的this"></a>2.5 箭头函数的this</h2><p>一个箭头函数定义时，该函数的<code>this</code>指向会自动绑定，例如：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="keyword">const</span> store = &#123;</span><br><span class="line">  data: <span class="literal">undefined</span>,</span><br><span class="line">  init() &#123;</span><br><span class="line">    <span class="keyword">const</span> checkDataValid = <span class="function"><span class="params">()</span> =&gt;</span> &#123;</span><br><span class="line">      <span class="keyword">return</span> !!<span class="keyword">this</span>.data </span><br><span class="line">        &amp;&amp; <span class="keyword">typeof</span> <span class="keyword">this</span>.data === <span class="string">'object'</span></span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">const</span> initData = <span class="function"><span class="params">()</span> =&gt;</span> &#123;</span><br><span class="line">      <span class="keyword">this</span>.data = &#123;&#125;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">if</span> (!checkDataValid()) &#123;</span><br><span class="line">      initData()</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">this</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="built_in">console</span>.log(store.data) <span class="comment">// undefined</span></span><br><span class="line"><span class="built_in">console</span>.log(store.init().data) <span class="comment">// &#123;&#125;</span></span><br></pre></td></tr></table></figure>
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <hr />
+  <h6>如果我的文章对你有帮助，可以请我喝杯咖啡哈~</h6>
+  <div id="qr" style="display: block;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/wechatpay.jpg" alt="TanKingKhun 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="/images/alipay.jpg" alt="TanKingKhun 支付宝">
+        <p>支付宝</p>
+      </div>
+  </div>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/JavaScript/" rel="tag"># JavaScript</a>
+              <a href="/tags/JS%E5%87%BD%E6%95%B0/" rel="tag"># JS函数</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2018/09/10/%E7%AE%80%E5%8D%95%E6%96%B9%E4%BE%BF%E7%9A%84%E6%9F%A5%E8%AF%A2%E5%8F%82%E6%95%B0%E5%BA%8F%E5%88%97%E5%8C%96%E6%8E%A5%E5%8F%A3URLSearchParams/" rel="prev" title="简单方便的查询参数序列化接口URLSearchParams">
+      <i class="fa fa-chevron-left"></i> 简单方便的查询参数序列化接口URLSearchParams
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2019/11/30/%E6%89%8B%E5%86%99%E4%B8%80%E4%B8%AA%E8%BF%AD%E4%BB%A3%E5%99%A8/" rel="next" title="手写一个迭代器">
+      手写一个迭代器 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#1-函数的类型"><span class="nav-text">1. 函数的类型</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-1-普通具名函数"><span class="nav-text">1.1 普通具名函数</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-2-匿名函数"><span class="nav-text">1.2 匿名函数</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-3-箭头函数"><span class="nav-text">1.3 箭头函数</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-4-生成器函数"><span class="nav-text">1.4 生成器函数</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-5-异步函数"><span class="nav-text">1.5 异步函数</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-5-1-异步函数返回的Promise状态"><span class="nav-text">1.5.1 异步函数返回的Promise状态</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#返回resolved状态"><span class="nav-text">返回resolved状态:</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#返回rejected状态"><span class="nav-text">返回rejected状态:</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#返回状态总结："><span class="nav-text">返回状态总结：</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-5-2-异步函数await关键字"><span class="nav-text">1.5.2 异步函数await关键字</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-5-3-await关键字的左右值"><span class="nav-text">1.5.3 await关键字的左右值</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-函数的执行上下文this"><span class="nav-text">2. 函数的执行上下文this</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#2-1-直接执行的this指向"><span class="nav-text">2.1 直接执行的this指向</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-2-对象属性访问执行的this指向"><span class="nav-text">2.2 对象属性访问执行的this指向</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-3-通过apply、call方式执行"><span class="nav-text">2.3 通过apply、call方式执行</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-4-通过bind方式执行"><span class="nav-text">2.4 通过bind方式执行</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-5-箭头函数的this"><span class="nav-text">2.5 箭头函数的this</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="TanKingKhun"
+      src="https://avatars.githubusercontent.com/u/14145521?v=4">
+  <p class="site-author-name" itemprop="name">TanKingKhun</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">30</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">32</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/chenjk110" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;chenjk110" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:chenjk110@qq.com" title="E-Mail → mailto:chenjk110@qq.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      Links
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="http://www.wangjianfeng.net/" title="http:&#x2F;&#x2F;www.wangjianfeng.net&#x2F;" rel="noopener" target="_blank">YouSeeSeeMe</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://www.fidding.me/" title="http:&#x2F;&#x2F;www.fidding.me&#x2F;" rel="noopener" target="_blank">Fidding</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://zhujp.net/" title="http:&#x2F;&#x2F;zhujp.net&#x2F;" rel="noopener" target="_blank">Venus</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://toad.dev/" title="https:&#x2F;&#x2F;toad.dev&#x2F;" rel="noopener" target="_blank">Toad.Woo</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">TanKingKhun</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/theme-next/theme-next-pjax@0/pjax.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/velocity/1.2.1/velocity.min.js"></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/velocity/1.2.1/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+  <script>
+var pjax = new Pjax({
+  selectors: [
+    'head title',
+    '#page-configurations',
+    '.content-wrap',
+    '.post-toc-wrap',
+    '.languages',
+    '#pjax'
+  ],
+  switches: {
+    '.post-toc-wrap': Pjax.switches.innerHTML
+  },
+  analytics: false,
+  cacheBust: false,
+  scrollTo : !CONFIG.bookmark.enable
+});
+
+window.addEventListener('pjax:success', () => {
+  document.querySelectorAll('script[data-pjax], script#page-configurations, #pjax script').forEach(element => {
+    var code = element.text || element.textContent || element.innerHTML || '';
+    var parent = element.parentNode;
+    parent.removeChild(element);
+    var script = document.createElement('script');
+    if (element.id) {
+      script.id = element.id;
+    }
+    if (element.className) {
+      script.className = element.className;
+    }
+    if (element.type) {
+      script.type = element.type;
+    }
+    if (element.src) {
+      script.src = element.src;
+      // Force synchronous loading of peripheral JS.
+      script.async = false;
+    }
+    if (element.dataset.pjax !== undefined) {
+      script.dataset.pjax = '';
+    }
+    if (code !== '') {
+      script.appendChild(document.createTextNode(code));
+    }
+    parent.appendChild(script);
+  });
+  NexT.boot.refresh();
+  // Define Motion Sequence & Bootstrap Motion.
+  if (CONFIG.motion.enable) {
+    NexT.motion.integrator
+      .init()
+      .add(NexT.motion.middleWares.subMenu)
+      .add(NexT.motion.middleWares.postList)
+      .bootstrap();
+  }
+  NexT.utils.updateSidebarPosition();
+});
+</script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script data-pjax>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdnjs.cloudflare.com/ajax/libs/mermaid/8.4.8/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme    : 'forest',
+      logLevel : 3,
+      flowchart: { curve     : 'linear' },
+      gantt    : { axisFormat: '%m/%d/%Y' },
+      sequence : { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+    <div id="pjax">
+  
+
+  
+
+    </div>
+</body>
+</html>

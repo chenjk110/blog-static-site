@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"blog.dymox.top","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":true,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="prompt-command.js文件位于webapck-cli源码包的bin&#x2F;utils&#x2F;目录下，该文件里面的内容主要为运行npm命令相关的一些操作 123456789101112131415161718192021222324252627282930313233343536373839404142&#x2F;&#x2F; based on https:&#x2F;&#x2F;github.com&#x2F;webpack&#x2F;webpack&#x2F;bl">
+<meta property="og:type" content="article">
+<meta property="og:title" content="webpack-cli源码阅读: 「prompt-command.js」">
+<meta property="og:url" content="https://blog.dymox.top/2020/08/19/webpack-cli%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-%E3%80%8Cprompt-command-js%E3%80%8D/index.html">
+<meta property="og:site_name" content="TanKingKhun&#39;s Blog">
+<meta property="og:description" content="prompt-command.js文件位于webapck-cli源码包的bin&#x2F;utils&#x2F;目录下，该文件里面的内容主要为运行npm命令相关的一些操作 123456789101112131415161718192021222324252627282930313233343536373839404142&#x2F;&#x2F; based on https:&#x2F;&#x2F;github.com&#x2F;webpack&#x2F;webpack&#x2F;bl">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-08-19T06:12:21.000Z">
+<meta property="article:modified_time" content="2021-06-26T11:40:14.468Z">
+<meta property="article:author" content="TanKingKhun">
+<meta property="article:tag" content="源码阅读">
+<meta property="article:tag" content="webpack">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://blog.dymox.top/2020/08/19/webpack-cli%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-%E3%80%8Cprompt-command-js%E3%80%8D/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>webpack-cli源码阅读: 「prompt-command.js」 | TanKingKhun's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">TanKingKhun's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.dymox.top/2020/08/19/webpack-cli%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-%E3%80%8Cprompt-command-js%E3%80%8D/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://avatars.githubusercontent.com/u/14145521?v=4">
+      <meta itemprop="name" content="TanKingKhun">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="TanKingKhun's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          webpack-cli源码阅读: 「prompt-command.js」
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-08-19 14:12:21" itemprop="dateCreated datePublished" datetime="2020-08-19T14:12:21+08:00">2020-08-19</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-06-26 19:40:14" itemprop="dateModified" datetime="2021-06-26T19:40:14+08:00">2021-06-26</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p><code>prompt-command.js</code>文件位于webapck-cli源码包的bin/utils/目录下，该文件里面的内容主要为运行npm命令相关的一些操作</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// based on https://github.com/webpack/webpack/blob/master/bin/webpack.js</span></span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param <span class="type">&#123;string&#125;</span> </span>command 命令</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param <span class="type">&#123;string[]&#125;</span> </span>args 命令行参数</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@returns <span class="type">&#123;Promise&lt;void&gt;&#125;</span> </span>promise 返回结果的Promise实例</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">const</span> runCommand = <span class="function">(<span class="params">command, args</span>) =&gt;</span> &#123;</span><br><span class="line">  <span class="comment">// 使用child_process模块，进行shell命令的执行</span></span><br><span class="line">  <span class="comment">// 由于js为单线程、额外的shell命令执行与交互</span></span><br><span class="line">  <span class="comment">// 需要在另外子线程中执行。</span></span><br><span class="line">  <span class="keyword">const</span> cp = <span class="built_in">require</span>(<span class="string">"child_process"</span>);</span><br><span class="line">  </span><br><span class="line">  <span class="comment">// 构建Promise</span></span><br><span class="line">  <span class="keyword">return</span> <span class="keyword">new</span> <span class="built_in">Promise</span>(<span class="function">(<span class="params">resolve, reject</span>) =&gt;</span> &#123;</span><br><span class="line">    <span class="comment">// 利用child_process模块的spawn方法</span></span><br><span class="line">    <span class="comment">// 该方法实现创建出一个子线程实例</span></span><br><span class="line">    <span class="keyword">const</span> executedCommand = cp.spawn(command, args, &#123;</span><br><span class="line">      stdio: <span class="string">"inherit"</span>,</span><br><span class="line">      shell: <span class="literal">true</span> <span class="comment">// 通过系统shell进行执行命令</span></span><br><span class="line">    &#125;);</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 注册child_process实例错误事件</span></span><br><span class="line">    <span class="comment">// 对应resolve与reject</span></span><br><span class="line">    executedCommand.on(<span class="string">"error"</span>, error =&gt; &#123;</span><br><span class="line">      reject(error);</span><br><span class="line">    &#125;);</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 注册child_process实例退出事件</span></span><br><span class="line">    <span class="comment">// 对应resolve与reject</span></span><br><span class="line">    executedCommand.on(<span class="string">"exit"</span>, code =&gt; &#123;</span><br><span class="line">      <span class="comment">/// 退出状态吗为0，则正常退出</span></span><br><span class="line">      <span class="comment">/// shell中的退出状态吗0未正常</span></span><br><span class="line">      <span class="comment">/// 非0为对应的其它非正常退出</span></span><br><span class="line">      <span class="keyword">if</span> (code === <span class="number">0</span>) &#123;</span><br><span class="line">        resolve();</span><br><span class="line">      &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        reject();</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;);</span><br><span class="line">  &#125;);</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>关于exec与spwan的区别，在于：</p>
+<ol>
+<li><p>exec返回buffer实例</p>
+</li>
+<li><p>spawn返回stream实例</p>
+</li>
+</ol>
+<p>所以在需要长时间、大量处理数据输入输出，则选择spawn，其它短平快则方式选择exec等</p>
+<blockquote>
+<p>区别参考：<a href="https://www.hacksparrow.com/nodejs/difference-between-spawn-and-exec-of-node-js-child-rocess.html" target="_blank" rel="noopener">https://www.hacksparrow.com/nodejs/difference-between-spawn-and-exec-of-node-js-child-rocess.html</a></p>
+</blockquote>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 获取npm的全局包安装路径</span></span><br><span class="line"><span class="comment">// 主要是对命令`npm root -g`的封装</span></span><br><span class="line"><span class="keyword">const</span> npmGlobalRoot = <span class="function"><span class="params">()</span> =&gt;</span> &#123;</span><br><span class="line">  <span class="keyword">const</span> cp = <span class="built_in">require</span>(<span class="string">"child_process"</span>);</span><br><span class="line">  <span class="keyword">return</span> <span class="keyword">new</span> <span class="built_in">Promise</span>(<span class="function">(<span class="params">resolve, reject</span>) =&gt;</span> &#123;</span><br><span class="line">    <span class="comment">// 通过spawn方法创建对应命令的子线程实例</span></span><br><span class="line">    <span class="keyword">const</span> command = cp.spawn(<span class="string">"npm"</span>, [<span class="string">"root"</span>, <span class="string">"-g"</span>]);</span><br><span class="line">    </span><br><span class="line">    command.on(<span class="string">"error"</span>, error =&gt; reject(error)); <span class="comment">// 注册error事件并reject</span></span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 由于这边的命令没有做持续输出、所以，对于data就简单的调用一下toString()</span></span><br><span class="line">    <span class="comment">// 获取终端的执行结果</span></span><br><span class="line">    <span class="comment">// 如果在运行其它具有持续输出的命令时候、需要对data事件所返回的数据分片进行整合，</span></span><br><span class="line">    <span class="comment">// 并且在close事件中进行resolve，这样可防止丢失返回结果。</span></span><br><span class="line">    command.stdout.on(<span class="string">"data"</span>, data =&gt; resolve(data.toString()));</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// stderr的输出数据则为执行的错误消息、该事件非底层的error错误</span></span><br><span class="line">    <span class="comment">// 处理方式与stdout的data事件类似、不过在语义上，是reject</span></span><br><span class="line">    command.stderr.on(<span class="string">"data"</span>, data =&gt; reject(data));</span><br><span class="line">  &#125;);</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 运行`<span class="doctag">@webpack</span>-cli`相关已安装的包、或者命令</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param </span>packages 包名称</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param </span>pathForCmd 包的执行命令路径</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param </span>args 参数</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">const</span> runWhenInstalled = <span class="function">(<span class="params">packages, pathForCmd, ...args</span>) =&gt;</span> &#123;</span><br><span class="line">  </span><br><span class="line">  <span class="comment">// 引入运行命令对应的模块</span></span><br><span class="line">  <span class="keyword">const</span> currentPackage = <span class="built_in">require</span>(pathForCmd);</span><br><span class="line">  </span><br><span class="line">  <span class="comment">// 约定包默认导出为执行函数</span></span><br><span class="line">  <span class="keyword">const</span> func = currentPackage.default;</span><br><span class="line">  </span><br><span class="line">  <span class="keyword">if</span> (<span class="keyword">typeof</span> func !== <span class="string">"function"</span>) &#123;</span><br><span class="line">    <span class="comment">// 非函数则直接中断</span></span><br><span class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> <span class="built_in">Error</span>(<span class="string">`@webpack-cli/<span class="subst">$&#123;packages&#125;</span> failed to export a default function`</span>);</span><br><span class="line">  &#125;</span><br><span class="line">  </span><br><span class="line">  <span class="keyword">return</span> func(...args);</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 运行`<span class="doctag">@webpack</span>-cli`相关已安装的包、或者命令，如果未安装则提示执行安装</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param </span>packages 包名称</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param </span>args 参数</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="built_in">module</span>.exports = <span class="function"><span class="keyword">function</span> <span class="title">promptForInstallation</span>(<span class="params">packages, ...args</span>) </span>&#123;</span><br><span class="line">  </span><br><span class="line">  <span class="comment">// 组合目标包路径</span></span><br><span class="line">  <span class="keyword">const</span> nameOfPackage = <span class="string">"@webpack-cli/"</span> + packages;</span><br><span class="line">  </span><br><span class="line">  <span class="comment">// 默认标志该包是未安装状态、从后面去检测判断</span></span><br><span class="line">  <span class="keyword">let</span> packageIsInstalled = <span class="literal">false</span>;</span><br><span class="line">  </span><br><span class="line">  <span class="comment">// 包对应的路径</span></span><br><span class="line">  <span class="keyword">let</span> pathForCmd;</span><br><span class="line">  </span><br><span class="line">  <span class="keyword">try</span> &#123;</span><br><span class="line">    <span class="keyword">const</span> path = <span class="built_in">require</span>(<span class="string">"path"</span>);</span><br><span class="line">    <span class="keyword">const</span> fs = <span class="built_in">require</span>(<span class="string">"fs"</span>);</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 在当前项目node_modules文件夹中的查找对应包</span></span><br><span class="line">    pathForCmd = path.resolve(process.cwd(), <span class="string">"node_modules"</span>, <span class="string">"@webpack-cli"</span>, packages);</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 当前项目未安装、则进一步找全局</span></span><br><span class="line">    <span class="keyword">if</span> (!fs.existsSync(pathForCmd)) &#123;</span><br><span class="line">      <span class="comment">// 获取全局的node_modules路径</span></span><br><span class="line">      <span class="keyword">const</span> globalModules = <span class="built_in">require</span>(<span class="string">"global-modules"</span>);</span><br><span class="line">      </span><br><span class="line">      <span class="comment">// 拼接新的路径</span></span><br><span class="line">      pathForCmd = globalModules + <span class="string">"/@webpack-cli/"</span> + packages;</span><br><span class="line">      </span><br><span class="line">      <span class="comment">// 利用require.resolve来验证包是否存在</span></span><br><span class="line">      <span class="built_in">require</span>.resolve(pathForCmd);</span><br><span class="line">      </span><br><span class="line">    <span class="comment">// 存在文件</span></span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      <span class="built_in">require</span>.resolve(pathForCmd);</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// require.resolve正常执行，则包已安装</span></span><br><span class="line">    packageIsInstalled = <span class="literal">true</span>;</span><br><span class="line">  &#125; <span class="keyword">catch</span> (err) &#123;</span><br><span class="line">    <span class="comment">// require.resolve异常，则包未安装</span></span><br><span class="line">    packageIsInstalled = <span class="literal">false</span>;</span><br><span class="line">  &#125;</span><br><span class="line">  </span><br><span class="line">  <span class="comment">/// 如果包未安装则进一步提示安装</span></span><br><span class="line">  <span class="keyword">if</span> (!packageIsInstalled) &#123;</span><br><span class="line">    <span class="keyword">const</span> path = <span class="built_in">require</span>(<span class="string">"path"</span>);</span><br><span class="line">    <span class="keyword">const</span> fs = <span class="built_in">require</span>(<span class="string">"fs"</span>);</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 利用原生的readline模块进行询问</span></span><br><span class="line">    <span class="keyword">const</span> readLine = <span class="built_in">require</span>(<span class="string">"readline"</span>);</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 判断是否要通过yarn进行安装，通过yarn.lock来判断</span></span><br><span class="line">    <span class="keyword">const</span> isYarn = fs.existsSync(path.resolve(process.cwd(), <span class="string">"yarn.lock"</span>));</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 确定npm或者yarn作为安装器</span></span><br><span class="line">    <span class="keyword">const</span> packageManager = isYarn ? <span class="string">"yarn"</span> : <span class="string">"npm"</span>;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 构建安装命令需要的参数列表，这边默认为npm的参数形式</span></span><br><span class="line">    <span class="keyword">const</span> options = [<span class="string">"install"</span>, <span class="string">"-D"</span>, nameOfPackage];</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (isYarn) &#123;</span><br><span class="line">      <span class="comment">// yarn模式的话，修改参数列表 `install` -&gt; `add`</span></span><br><span class="line">      <span class="comment">// --&gt; `yarn add -D`</span></span><br><span class="line">      options[<span class="number">0</span>] = <span class="string">"add"</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 初始化安装webapck-cli</span></span><br><span class="line">    <span class="keyword">if</span> (packages === <span class="string">"init"</span>) &#123;</span><br><span class="line">      <span class="keyword">if</span> (isYarn) &#123;</span><br><span class="line">        options.splice(<span class="number">1</span>, <span class="number">1</span>); <span class="comment">// remove '-D'</span></span><br><span class="line">        options.splice(<span class="number">0</span>, <span class="number">0</span>, <span class="string">"global"</span>);</span><br><span class="line">        <span class="comment">// --&gt; `yarn global add`</span></span><br><span class="line">      &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        options[<span class="number">1</span>] = <span class="string">"-g"</span>;</span><br><span class="line">        <span class="comment">// --&gt; `npm install -g`</span></span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 拼接需要运行的参数</span></span><br><span class="line">    <span class="keyword">const</span> commandToBeRun = <span class="string">`<span class="subst">$&#123;packageManager&#125;</span> <span class="subst">$&#123;options.join(<span class="string">" "</span>)&#125;</span>`</span>;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 问题</span></span><br><span class="line">    <span class="keyword">const</span> question = <span class="string">`Would you like to install <span class="subst">$&#123;packages&#125;</span>? (That will run <span class="subst">$&#123;commandToBeRun&#125;</span>) (yes/NO) : `</span>;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">console</span>.error(<span class="string">`The command moved into a separate package: <span class="subst">$&#123;nameOfPackage&#125;</span>`</span>);</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 通过readline创建终端交互接口</span></span><br><span class="line">    <span class="keyword">const</span> questionInterface = readLine.createInterface(&#123;</span><br><span class="line">      input: process.stdin,</span><br><span class="line">      output: process.stdout</span><br><span class="line">    &#125;);</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 执行提示询问</span></span><br><span class="line">    questionInterface.question(question, answer =&gt; &#123;</span><br><span class="line">      <span class="comment">// 关闭接口</span></span><br><span class="line">      questionInterface.close();</span><br><span class="line">      </span><br><span class="line">      <span class="comment">// 根据不同输入执行</span></span><br><span class="line">      <span class="keyword">switch</span> (answer.toLowerCase()) &#123;</span><br><span class="line">        <span class="keyword">case</span> <span class="string">"y"</span>:</span><br><span class="line">        <span class="keyword">case</span> <span class="string">"yes"</span>:</span><br><span class="line">        <span class="keyword">case</span> <span class="string">"1"</span>: &#123; <span class="comment">// 按回车</span></span><br><span class="line">          <span class="comment">// 执行安装命令</span></span><br><span class="line">          runCommand(packageManager, options)</span><br><span class="line">            .then(<span class="function"><span class="params">_</span> =&gt;</span> &#123;</span><br><span class="line">              <span class="comment">// 初始化webpack-cli</span></span><br><span class="line">              <span class="keyword">if</span> (packages === <span class="string">"init"</span>) &#123;</span><br><span class="line">                npmGlobalRoot()</span><br><span class="line">                  .then(<span class="function"><span class="params">root</span> =&gt;</span> &#123;</span><br><span class="line">                    <span class="keyword">const</span> pathtoInit = path.resolve(root.trim(), <span class="string">"@webpack-cli"</span>, <span class="string">"init"</span>);</span><br><span class="line">                    <span class="keyword">return</span> pathtoInit;</span><br><span class="line">                  &#125;)</span><br><span class="line">                  .then(<span class="function"><span class="params">pathForInit</span> =&gt;</span> &#123;</span><br><span class="line">                    <span class="comment">// 找到init相关脚本模块、并执行</span></span><br><span class="line">                    <span class="keyword">return</span> <span class="built_in">require</span>(pathForInit).default(...args);</span><br><span class="line">                  &#125;)</span><br><span class="line">                  .catch(<span class="function"><span class="params">error</span> =&gt;</span> &#123;</span><br><span class="line">                    <span class="built_in">console</span>.error(error);</span><br><span class="line">                    process.exitCode = <span class="number">1</span>;</span><br><span class="line">                  &#125;);</span><br><span class="line">                <span class="keyword">return</span>;</span><br><span class="line">              &#125;</span><br><span class="line">            </span><br><span class="line">              <span class="comment">// 安装完对应的包后、通过runWhenInstalled执行命令</span></span><br><span class="line">              pathForCmd = path.resolve(process.cwd(), <span class="string">"node_modules"</span>, <span class="string">"@webpack-cli"</span>, packages);</span><br><span class="line">              <span class="keyword">return</span> runWhenInstalled(packages, pathForCmd, ...args);</span><br><span class="line">            &#125;)</span><br><span class="line">            .catch(<span class="function"><span class="params">error</span> =&gt;</span> &#123;</span><br><span class="line">              <span class="built_in">console</span>.error(error);</span><br><span class="line">              process.exitCode = <span class="number">1</span>;</span><br><span class="line">            &#125;);</span><br><span class="line">          <span class="keyword">break</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">default</span>: &#123;</span><br><span class="line">          <span class="comment">// 放弃安装、提示需要依赖包，退出程序</span></span><br><span class="line">          <span class="built_in">console</span>.error(<span class="string">`<span class="subst">$&#123;nameOfPackage&#125;</span> needs to be installed in order to run the command.`</span>);</span><br><span class="line">          process.exitCode = <span class="number">1</span>;</span><br><span class="line">          <span class="keyword">break</span>;</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;);</span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="comment">// 已经对应包已安装、则直接执行</span></span><br><span class="line">    <span class="keyword">return</span> runWhenInstalled(packages, pathForCmd, ...args);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <hr />
+  <h6>如果我的文章对你有帮助，可以请我喝杯咖啡哈~</h6>
+  <div id="qr" style="display: block;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/wechatpay.jpg" alt="TanKingKhun 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="/images/alipay.jpg" alt="TanKingKhun 支付宝">
+        <p>支付宝</p>
+      </div>
+  </div>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB/" rel="tag"># 源码阅读</a>
+              <a href="/tags/webpack/" rel="tag"># webpack</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/07/17/%E8%A7%A3%E6%9E%90%E6%96%87%E4%BB%B6%E8%B7%AF%E5%BE%84%E3%80%81%E5%BD%92%E5%B9%B6%E6%88%90%E7%9B%AE%E5%BD%95%E6%A0%91/" rel="prev" title="解析文件路径、归并成目录树">
+      <i class="fa fa-chevron-left"></i> 解析文件路径、归并成目录树
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2020/10/25/Mac%E4%B8%8B%E7%BC%96%E8%AF%91aria2-1-35-0%E3%80%81%E4%BF%AE%E6%94%B9TCP%E8%BF%9E%E6%8E%A5%E6%95%B0/" rel="next" title="Mac下编译aria2 1.35.0、修改TCP连接数">
+      Mac下编译aria2 1.35.0、修改TCP连接数 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="TanKingKhun"
+      src="https://avatars.githubusercontent.com/u/14145521?v=4">
+  <p class="site-author-name" itemprop="name">TanKingKhun</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">30</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">32</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/chenjk110" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;chenjk110" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:chenjk110@qq.com" title="E-Mail → mailto:chenjk110@qq.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      Links
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="http://www.wangjianfeng.net/" title="http:&#x2F;&#x2F;www.wangjianfeng.net&#x2F;" rel="noopener" target="_blank">YouSeeSeeMe</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://www.fidding.me/" title="http:&#x2F;&#x2F;www.fidding.me&#x2F;" rel="noopener" target="_blank">Fidding</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://zhujp.net/" title="http:&#x2F;&#x2F;zhujp.net&#x2F;" rel="noopener" target="_blank">Venus</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://toad.dev/" title="https:&#x2F;&#x2F;toad.dev&#x2F;" rel="noopener" target="_blank">Toad.Woo</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">TanKingKhun</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/theme-next/theme-next-pjax@0/pjax.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/velocity/1.2.1/velocity.min.js"></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/velocity/1.2.1/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+  <script>
+var pjax = new Pjax({
+  selectors: [
+    'head title',
+    '#page-configurations',
+    '.content-wrap',
+    '.post-toc-wrap',
+    '.languages',
+    '#pjax'
+  ],
+  switches: {
+    '.post-toc-wrap': Pjax.switches.innerHTML
+  },
+  analytics: false,
+  cacheBust: false,
+  scrollTo : !CONFIG.bookmark.enable
+});
+
+window.addEventListener('pjax:success', () => {
+  document.querySelectorAll('script[data-pjax], script#page-configurations, #pjax script').forEach(element => {
+    var code = element.text || element.textContent || element.innerHTML || '';
+    var parent = element.parentNode;
+    parent.removeChild(element);
+    var script = document.createElement('script');
+    if (element.id) {
+      script.id = element.id;
+    }
+    if (element.className) {
+      script.className = element.className;
+    }
+    if (element.type) {
+      script.type = element.type;
+    }
+    if (element.src) {
+      script.src = element.src;
+      // Force synchronous loading of peripheral JS.
+      script.async = false;
+    }
+    if (element.dataset.pjax !== undefined) {
+      script.dataset.pjax = '';
+    }
+    if (code !== '') {
+      script.appendChild(document.createTextNode(code));
+    }
+    parent.appendChild(script);
+  });
+  NexT.boot.refresh();
+  // Define Motion Sequence & Bootstrap Motion.
+  if (CONFIG.motion.enable) {
+    NexT.motion.integrator
+      .init()
+      .add(NexT.motion.middleWares.subMenu)
+      .add(NexT.motion.middleWares.postList)
+      .bootstrap();
+  }
+  NexT.utils.updateSidebarPosition();
+});
+</script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script data-pjax>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdnjs.cloudflare.com/ajax/libs/mermaid/8.4.8/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme    : 'forest',
+      logLevel : 3,
+      flowchart: { curve     : 'linear' },
+      gantt    : { axisFormat: '%m/%d/%Y' },
+      sequence : { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+    <div id="pjax">
+  
+
+  
+
+    </div>
+</body>
+</html>

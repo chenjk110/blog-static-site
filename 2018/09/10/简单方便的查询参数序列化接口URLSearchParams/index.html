@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"blog.dymox.top","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":true,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="在自定义封装GET请求方法时候，通常需要去序列号请求参数对象，将查询信息的对象转化成字符串，然后再拼接到url后面组成最终的url，如 1234567891011121314151617function qs(obj) &amp;#123;    var str &#x3D; Object.keys(obj).map(key &#x3D;&gt; &#96;$&amp;#123;key&amp;#125;&#x3D;$&amp;#123;obj[key]&amp;#125;">
+<meta property="og:type" content="article">
+<meta property="og:title" content="简单方便的查询参数序列化接口URLSearchParams">
+<meta property="og:url" content="https://blog.dymox.top/2018/09/10/%E7%AE%80%E5%8D%95%E6%96%B9%E4%BE%BF%E7%9A%84%E6%9F%A5%E8%AF%A2%E5%8F%82%E6%95%B0%E5%BA%8F%E5%88%97%E5%8C%96%E6%8E%A5%E5%8F%A3URLSearchParams/index.html">
+<meta property="og:site_name" content="TanKingKhun&#39;s Blog">
+<meta property="og:description" content="在自定义封装GET请求方法时候，通常需要去序列号请求参数对象，将查询信息的对象转化成字符串，然后再拼接到url后面组成最终的url，如 1234567891011121314151617function qs(obj) &amp;#123;    var str &#x3D; Object.keys(obj).map(key &#x3D;&gt; &#96;$&amp;#123;key&amp;#125;&#x3D;$&amp;#123;obj[key]&amp;#125;">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2018-09-10T08:36:19.000Z">
+<meta property="article:modified_time" content="2021-06-26T11:40:14.440Z">
+<meta property="article:author" content="TanKingKhun">
+<meta property="article:tag" content="JavaScript">
+<meta property="article:tag" content="Web Front End">
+<meta property="article:tag" content="Web前端">
+<meta property="article:tag" content="chenjk110">
+<meta property="article:tag" content="TanKingKhun">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://blog.dymox.top/2018/09/10/%E7%AE%80%E5%8D%95%E6%96%B9%E4%BE%BF%E7%9A%84%E6%9F%A5%E8%AF%A2%E5%8F%82%E6%95%B0%E5%BA%8F%E5%88%97%E5%8C%96%E6%8E%A5%E5%8F%A3URLSearchParams/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>简单方便的查询参数序列化接口URLSearchParams | TanKingKhun's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">TanKingKhun's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.dymox.top/2018/09/10/%E7%AE%80%E5%8D%95%E6%96%B9%E4%BE%BF%E7%9A%84%E6%9F%A5%E8%AF%A2%E5%8F%82%E6%95%B0%E5%BA%8F%E5%88%97%E5%8C%96%E6%8E%A5%E5%8F%A3URLSearchParams/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://avatars.githubusercontent.com/u/14145521?v=4">
+      <meta itemprop="name" content="TanKingKhun">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="TanKingKhun's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          简单方便的查询参数序列化接口URLSearchParams
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2018-09-10 16:36:19" itemprop="dateCreated datePublished" datetime="2018-09-10T16:36:19+08:00">2018-09-10</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-06-26 19:40:14" itemprop="dateModified" datetime="2021-06-26T19:40:14+08:00">2021-06-26</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>在自定义封装GET请求方法时候，通常需要去序列号请求参数对象，将查询信息的对象转化成字符串，然后再拼接到url后面组成最终的url，如</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">qs</span>(<span class="params">obj</span>) </span>&#123;</span><br><span class="line">    <span class="keyword">var</span> str = <span class="built_in">Object</span>.keys(obj).map(<span class="function"><span class="params">key</span> =&gt;</span> <span class="string">`<span class="subst">$&#123;key&#125;</span>=<span class="subst">$&#123;obj[key]&#125;</span>`</span>)</span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">encodeURIComponent</span>(str)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">combine</span>(<span class="params">url, params</span>) </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> url + (url.includes(<span class="string">'?'</span>) ? <span class="string">'&amp;'</span> :<span class="string">'?'</span>) + qs(params)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> url = <span class="string">'http://localhost:3000/info'</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> queryData = &#123;</span><br><span class="line">  username: <span class="string">'Test'</span>,</span><br><span class="line">    id: <span class="number">13</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">url = combine(url, queryData) <span class="comment">// --&gt; 'http://localhost:3000/info?usename=Test&amp;id=13'</span></span><br></pre></td></tr></table></figure>
+
+<p>除了将对象序列号，有时也需要将url的请求参数解析成对象方便读取操作，如</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">parseParams</span>(<span class="params">url</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">var</span> queryStr = url.split(<span class="string">'?'</span>)[<span class="number">1</span>]</span><br><span class="line">    <span class="keyword">var</span> queryData = <span class="built_in">Object</span>.create(<span class="literal">null</span>)</span><br><span class="line">    <span class="keyword">if</span> (queryStr) &#123;</span><br><span class="line">        queryStr = <span class="built_in">decodeURIComponent</span>(queryStr)</span><br><span class="line">        queryStr.split(<span class="string">'&amp;'</span>).forEach(<span class="function"><span class="keyword">function</span> (<span class="params">item</span>)</span>&#123;</span><br><span class="line">        <span class="keyword">var</span> keyVal = item.split(<span class="string">'='</span>)</span><br><span class="line">            queryData[keyVal[<span class="number">0</span>]] = keyVal[<span class="number">1</span>]</span><br><span class="line">        &#125;)</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> queryData</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> url = <span class="string">'http://localhost:3000/info?username=Test&amp;id=13'</span></span><br><span class="line"><span class="keyword">var</span> query = parseParams(url) <span class="comment">// --&gt; &#123; username: 'Test', id: '13' &#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>虽然以上的需求能够自己简单的实现出来，但既然提供了标准的Web API，就应该积极使用原生提供的API，那么，现在就来了解一下标准Web API提供的URLSearchParams接口。</p>
+<h1 id="1-URLSearchParams-构造函数"><a href="#1-URLSearchParams-构造函数" class="headerlink" title="1. URLSearchParams() 构造函数"></a>1. URLSearchParams() 构造函数</h1><p>URLSearchParams()构造函数可以传入一个url的search部分、[[key, value], …[key, value]]形式的一个数组或者一个URLSearchParams实例，解析并返回一个URLSearchParams实例，该实例能够实现对url中的查询字段信息进行读取、删除、再次序列号等操作，简单事例如下：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> url = <span class="keyword">new</span> URL(<span class="string">'http://localhost:3000/info?username=test&amp;id=10'</span>)</span><br><span class="line"><span class="keyword">var</span> search = url.search <span class="comment">// 'username=test&amp;id=10'</span></span><br><span class="line"><span class="keyword">var</span> searchParams = <span class="keyword">new</span> URLSearchParams(search)</span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> (<span class="keyword">var</span> param <span class="keyword">of</span> searchParams.entries()) &#123;</span><br><span class="line">    <span class="built_in">console</span>.log(param) <span class="comment">// --&gt; ['username', 'test'], ['id', '10']</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> searchParams2 = <span class="keyword">new</span> URLSearchParams([[<span class="string">'name'</span>, <span class="string">'hello'</span>], [<span class="string">'ok'</span>, <span class="number">1</span>]])</span><br><span class="line"><span class="keyword">for</span> (<span class="keyword">var</span> param <span class="keyword">of</span> searchParams2.entries()) &#123;</span><br><span class="line">    <span class="built_in">console</span>.log(param) <span class="comment">// --&gt; ['name', 'hello], ['ok', '1']</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> searchParams3 = <span class="keyword">new</span> URLSearchParams(searchParams2)</span><br></pre></td></tr></table></figure>
+
+<h2 id="1-1-toString-方法"><a href="#1-1-toString-方法" class="headerlink" title="1.1 toString() 方法"></a>1.1 toString() 方法</h2><p>该方法将URLSearchParams实例序列号，转换成url的search形式字符串，例如：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> params = <span class="keyword">new</span> URLSearchParams()</span><br><span class="line"></span><br><span class="line">params.append(<span class="string">'username'</span>, <span class="string">'jack'</span>)</span><br><span class="line">params.append(<span class="string">'id'</span>, <span class="number">10</span>)</span><br><span class="line"></span><br><span class="line">params.toString() <span class="comment">// --&gt; 'username=jack&amp;id=10'</span></span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="1-2-append-key-value-方法"><a href="#1-2-append-key-value-方法" class="headerlink" title="1.2 append(key, value) 方法"></a>1.2 append(key, value) 方法</h2><p>该方法能够添加请求字段信息，注意，该方法会允许重复添加相同key的数据，例如现在构造一个空的URLSearchParams实例，然后往里面添加需要查询的字段信息：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> searchParams = <span class="keyword">new</span> URLSearchParams()</span><br><span class="line">searchParams.append(<span class="string">'username'</span>, <span class="string">'jane'</span>)</span><br><span class="line">searchParams.append(<span class="string">'age'</span>, <span class="number">20</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> (<span class="keyword">var</span> param <span class="keyword">of</span> searchParams) &#123;</span><br><span class="line">    <span class="built_in">console</span>.log(param) <span class="comment">// --&gt; ['username', 'jane'], ['age', '20']</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">searchParams.toString() <span class="comment">// --&gt; 'username=jane&amp;age=20'</span></span><br><span class="line"></span><br><span class="line">searchParams.append(<span class="string">'username'</span>, <span class="string">'jack'</span>)</span><br><span class="line"></span><br><span class="line">searchParams.toString() <span class="comment">// --&gt; 'username=jane&amp;age=20&amp;username=jack'</span></span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="1-3-delete-key-方法"><a href="#1-3-delete-key-方法" class="headerlink" title="1.3 delete(key) 方法"></a>1.3 delete(key) 方法</h2><p>该方法能够删除一个查询字段，会删除对应key的所有匹配相，如：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 使用前面创建的searchParams实例: 'username=jane&amp;age=20&amp;username=jack'</span></span><br><span class="line">searchParams.delete(<span class="string">'username'</span>) <span class="comment">// 将会删除username=jane, username=jack</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> (<span class="keyword">var</span> param <span class="keyword">of</span> searchParams.entries()) &#123;</span><br><span class="line">    <span class="built_in">console</span>.log(param) <span class="comment">// --&gt; ['age', '20']</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">searchParams.toString() <span class="comment">// --&gt; 'age=20'</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="1-4-set-key-value-方法"><a href="#1-4-set-key-value-方法" class="headerlink" title="1.4 set(key, value) 方法"></a>1.4 set(key, value) 方法</h2><p>该方法能够搜索匹配传入的key值，并设置为value，若不存在则创建key，value信息，并且如果存在重复的key会删除其他值只保留一个，例如：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> params = <span class="keyword">new</span> URLSearchParams()</span><br><span class="line">params.append(<span class="string">'id'</span>, <span class="number">1</span>)</span><br><span class="line">params.append(<span class="string">'id'</span>, <span class="number">2</span>)</span><br><span class="line">params.toString() <span class="comment">// --&gt; 'id=1&amp;id=2'</span></span><br><span class="line"></span><br><span class="line">params.set(<span class="string">'name'</span>, <span class="number">3</span>) <span class="comment">// 找到id字段并且有多个，删除多余只保留一个并赋值</span></span><br><span class="line">params.toString() <span class="comment">// --&gt; 'id=3'</span></span><br><span class="line"></span><br><span class="line">params.set(<span class="string">'age'</span>, <span class="number">20</span>) <span class="comment">// 未存在age字段，则创建</span></span><br><span class="line">params.toString() <span class="comment">// --&gt; 'id=3&amp;age=20'</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="1-5-get-key-方法"><a href="#1-5-get-key-方法" class="headerlink" title="1.5 get(key) 方法"></a>1.5 get(key) 方法</h2><p>该方法返回对应key的值，若有多个值对应则返回第一个值，若不存在则返回null，例如：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> params = <span class="keyword">new</span> URLSearchParams()</span><br><span class="line">params.get(<span class="string">'name'</span>) <span class="comment">// --&gt; null</span></span><br><span class="line"></span><br><span class="line">params.set(<span class="string">'name'</span>, <span class="string">'jack'</span>)</span><br><span class="line">params.get(<span class="string">'name'</span>) <span class="comment">// --&gt; 'jack'</span></span><br><span class="line"></span><br><span class="line">params.append(<span class="string">'name'</span>, <span class="string">'jane'</span>)</span><br><span class="line">params.get（<span class="string">'name'</span>) <span class="comment">// --&gt; 'jack'</span></span><br><span class="line"></span><br><span class="line">params.toString() <span class="comment">// 'name=jack&amp;name=jane'</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="1-6-getAll-key-方法"><a href="#1-6-getAll-key-方法" class="headerlink" title="1.6 getAll(key) 方法"></a>1.6 getAll(key) 方法</h2><p>此方法返回匹配到的key对应的值，与get()方法不用，该方法将放回所有匹配的值，例如：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> p = <span class="keyword">new</span> URLSearchParams()</span><br><span class="line">p.append(<span class="string">'id'</span>, <span class="number">1</span>)</span><br><span class="line">p.append(<span class="string">'id'</span>, <span class="number">2</span>)</span><br><span class="line"></span><br><span class="line">p.get(<span class="string">'id'</span>) <span class="comment">// --&gt; '1'</span></span><br><span class="line">p.getAll(<span class="string">'id'</span>) <span class="comment">// --&gt; ['1', '2']</span></span><br><span class="line"></span><br><span class="line">p.set(<span class="string">'id'</span>, <span class="number">0</span>)</span><br><span class="line">p.getAll(<span class="string">'id'</span>) <span class="comment">// --&gt; ['0']</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="1-7-has-key-方法"><a href="#1-7-has-key-方法" class="headerlink" title="1.7 has(key) 方法"></a>1.7 has(key) 方法</h2><p>此方法判断对应的key是否存在，返回布尔值，例如：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> p = <span class="keyword">new</span> URLSearchParams()</span><br><span class="line">p.append(<span class="string">'id'</span>, <span class="number">0</span>)</span><br><span class="line"></span><br><span class="line">p.has(<span class="string">'id'</span>) <span class="comment">// --&gt; true</span></span><br><span class="line">p.has(<span class="string">'name'</span>) <span class="comment">// --&gt; false</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="1-8-sort-方法"><a href="#1-8-sort-方法" class="headerlink" title="1.8 sort() 方法"></a>1.8 sort() 方法</h2><p>该方法根据key的unicode字序进行对键值对排序，返回undefined值，例如：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> p = <span class="keyword">new</span> URLSearchParams()</span><br><span class="line">p.append(<span class="string">'b'</span>, <span class="number">1</span>)</span><br><span class="line">p.append(<span class="string">'a'</span>, <span class="number">2</span>)</span><br><span class="line">p.append(<span class="string">'c'</span>, <span class="number">3</span>)</span><br><span class="line"></span><br><span class="line">p.toString() <span class="comment">// --&gt; 'b=1&amp;a=2&amp;c=3'</span></span><br><span class="line"></span><br><span class="line">p.sort() <span class="comment">// --&gt; undefined</span></span><br><span class="line">p.toString() <span class="comment">// --&gt; 'a=2&amp;b=1&amp;c=3'</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="1-9-keys-方法"><a href="#1-9-keys-方法" class="headerlink" title="1.9 keys() 方法"></a>1.9 keys() 方法</h2><p>该方法返回包含实例所有key的iterator对象，并且重复的key也将包含在内，例如：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> p = <span class="keyword">new</span> URLSearchParams()</span><br><span class="line">p.append(<span class="string">'name'</span>, <span class="string">'jack'</span>)</span><br><span class="line">p.append(<span class="string">'age'</span>, <span class="number">20</span>)</span><br><span class="line">p.append(<span class="string">'id'</span>, <span class="number">0</span>)</span><br><span class="line">p.append(<span class="string">'id'</span>, <span class="number">1</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> keys = p.keys() <span class="comment">// 返回包含所有key的iterator对象</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> (<span class="keyword">var</span> key <span class="keyword">of</span> keys) &#123;</span><br><span class="line">  <span class="built_in">console</span>.log(key) <span class="comment">// --&gt; 'name', 'age', 'id', 'id'</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="1-20-values-方法"><a href="#1-20-values-方法" class="headerlink" title="1.20 values() 方法"></a>1.20 values() 方法</h2><p>该方法返回包含实例的所有value的iterator对象, 并且重复的key对应的value也包含在内，例如：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> p = <span class="keyword">new</span> URLSearchParams()</span><br><span class="line">p.append(<span class="string">'name'</span>, <span class="string">'jack'</span>)</span><br><span class="line">p.append(<span class="string">'age'</span>, <span class="number">10</span>)</span><br><span class="line">p.append(<span class="string">'name'</span>, <span class="string">'jane'</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> (<span class="keyword">var</span> value <span class="keyword">of</span> p.values()) &#123;</span><br><span class="line">    <span class="built_in">console</span>.log(value) <span class="comment">// --&gt; 'jack', '10', 'jane'</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="1-21-entries-方法"><a href="#1-21-entries-方法" class="headerlink" title="1.21 entries() 方法"></a>1.21 entries() 方法</h2><p>该方法返回包含实例中的键值对数组的iterator对象，例如：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> p = <span class="keyword">new</span> URLSearchParams()</span><br><span class="line">p.append(<span class="string">'name'</span>, <span class="string">'jack'</span>)</span><br><span class="line">p.append(<span class="string">'id'</span>, <span class="number">1</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span> (<span class="keyword">var</span> val <span class="keyword">of</span> p) &#123;</span><br><span class="line">    <span class="built_in">console</span>.log(val) <span class="comment">// --&gt; ['name', 'jack'], ['id', '1']</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h1 id="2-关于传入的参数注意问题"><a href="#2-关于传入的参数注意问题" class="headerlink" title="2. 关于传入的参数注意问题"></a>2. 关于传入的参数注意问题</h1><p>前面讲到构造函数可以传入url的search部分字符串，所以，当传入不符合规格的字符串可以看下解析结果：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> search = <span class="string">'abc'</span></span><br><span class="line"><span class="keyword">var</span> p = <span class="keyword">new</span> URLSearchParams(search)</span><br><span class="line">p.toString() <span class="comment">// --&gt; 'abc='</span></span><br><span class="line"></span><br><span class="line">search = <span class="string">'a&amp;b'</span></span><br><span class="line">p = <span class="keyword">new</span> URLSearchParams(search)</span><br><span class="line">p.toString() <span class="comment">// --&gt; 'a=&amp;b='</span></span><br><span class="line"></span><br><span class="line">search = <span class="string">'a==='</span></span><br><span class="line">p = <span class="keyword">new</span> URLSearchParams(search)</span><br><span class="line">p.toString() <span class="comment">// --&gt; 'a=%3D%3D'</span></span><br><span class="line"></span><br><span class="line">search = <span class="string">'a&amp;&amp;b'</span></span><br><span class="line">p = <span class="keyword">new</span> URLSearchParams(search)</span><br><span class="line">p.toSring() <span class="comment">// --&gt; 'a=&amp;b='</span></span><br><span class="line"></span><br><span class="line">search = <span class="string">'&amp;&amp;&amp;'</span></span><br><span class="line">p = <span class="keyword">new</span> URLSearchParams(search)</span><br><span class="line">p.toString() <span class="comment">// --&gt; ''</span></span><br></pre></td></tr></table></figure>
+
+<p>所以字符串的解析规则为：</p>
+<ol>
+<li>根据<code>&amp;</code>字符做拆分，去除空字符项，获取拆分后的字符串数组</li>
+<li>然后再依次根据<code>=</code>做拆分，取第一个等号左边部分为’key’的值，右边为’value’的值</li>
+</ol>
+<p>通过代码简单的演示一下:</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> str = <span class="string">'a&amp;&amp;b'</span></span><br><span class="line"><span class="comment">/* 解析 */</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">parse</span>(<span class="params">str</span>) </span>&#123;</span><br><span class="line">    <span class="comment">/* 解码URI安全字符 */</span></span><br><span class="line">    str = <span class="built_in">decodeURIComponent</span>(str)</span><br><span class="line">    <span class="comment">/* 根据 &amp; 字符切割组 */</span></span><br><span class="line">  <span class="keyword">var</span> strArr = str.split(<span class="string">'&amp;'</span>) <span class="comment">// --&gt; ['a', '', 'b']</span></span><br><span class="line">    <span class="comment">/* 利用Boolean构造函数去除无效空值 */</span></span><br><span class="line">    strArr = strArr.filter(<span class="built_in">Boolean</span>) <span class="comment">// --&gt; ['a', 'b']</span></span><br><span class="line">  <span class="comment">/* 根据第一个 = 切割数据对 */</span></span><br><span class="line">    <span class="keyword">var</span> params = strArr.map(<span class="function"><span class="keyword">function</span> (<span class="params">item</span>) </span>&#123;</span><br><span class="line">        <span class="keyword">var</span> tmp = item.split(<span class="string">'='</span>)</span><br><span class="line">        <span class="comment">/* 补空或者合并尾 */</span></span><br><span class="line">        <span class="keyword">return</span> tmp &lt; <span class="number">2</span> ? tmp.concat(<span class="string">''</span>) : [tmp[<span class="number">0</span>], tmp.slice(<span class="number">1</span>).join(<span class="string">''</span>)]</span><br><span class="line">    &#125;) <span class="comment">// --&gt; [['a', ''], ['b', '']] </span></span><br><span class="line">    <span class="keyword">return</span> params</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">/* 序列号 */</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">serialized</span>(<span class="params">params</span>) </span>&#123;</span><br><span class="line">    <span class="keyword">var</span> str = params.map(<span class="function"><span class="keyword">function</span> (<span class="params">pair</span>) </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> pair.map(<span class="built_in">encodeURIComponent</span>).join(<span class="string">'='</span>)</span><br><span class="line">    &#125;).join(<span class="string">'&amp;'</span>)</span><br><span class="line">  <span class="keyword">return</span> str</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>测试一下：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> str, params</span><br><span class="line"></span><br><span class="line"><span class="comment">// t1</span></span><br><span class="line">str = <span class="string">'abc'</span></span><br><span class="line">params = parse(str) <span class="comment">// --&gt; [['abc', '']]</span></span><br><span class="line">serialized(params) <span class="comment">// --&gt; 'abc='</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// t2</span></span><br><span class="line">str = <span class="string">'a&amp;b'</span></span><br><span class="line">params = parse(str) <span class="comment">// --&gt; [['a', ''], ['b', '']]</span></span><br><span class="line">serialized(params) <span class="comment">// --&gt; 'a=&amp;b=&amp;c='</span></span><br><span class="line"></span><br><span class="line">str = <span class="string">'a==='</span></span><br><span class="line">params = parse(str) <span class="comment">// --&gt; [['a', '==']]</span></span><br><span class="line">serialized(params) --&gt; <span class="string">'a=%3D%3D'</span></span><br><span class="line"></span><br><span class="line">str = <span class="string">'a&amp;&amp;b'</span></span><br><span class="line">params = parse(str) <span class="comment">// --&gt; [['a', ''], ['b', '']]</span></span><br><span class="line">serialized(params) <span class="comment">// --&gt; 'a=&amp;b='</span></span><br><span class="line"></span><br><span class="line">str = <span class="string">'&amp;&amp;&amp;'</span></span><br><span class="line">params = parse(str) <span class="comment">// []</span></span><br><span class="line">serialized(params)<span class="comment">// --&gt; ''</span></span><br></pre></td></tr></table></figure>
+
+<p>有了系列关系的转换方法，便可以进步按照需求进行封装了，得力于强大的原生Web API，让我们的开发工作变得方便许多。</p>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <hr />
+  <h6>如果我的文章对你有帮助，可以请我喝杯咖啡哈~</h6>
+  <div id="qr" style="display: block;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/wechatpay.jpg" alt="TanKingKhun 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="/images/alipay.jpg" alt="TanKingKhun 支付宝">
+        <p>支付宝</p>
+      </div>
+  </div>
+</div>
+
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2018/09/10/%E7%AE%80%E6%B4%81%E6%98%8E%E4%BA%86%E7%9A%84Fetch-API/" rel="prev" title="简洁明了的Fetch API">
+      <i class="fa fa-chevron-left"></i> 简洁明了的Fetch API
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2019/11/27/JavaScript%E9%87%8D%E8%A6%81%E7%B1%BB%E5%9E%8B%E3%80%8CFunction%E3%80%8D/" rel="next" title="JavaScript重要类型「Function」">
+      JavaScript重要类型「Function」 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#1-URLSearchParams-构造函数"><span class="nav-text">1. URLSearchParams() 构造函数</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-1-toString-方法"><span class="nav-text">1.1 toString() 方法</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-2-append-key-value-方法"><span class="nav-text">1.2 append(key, value) 方法</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-3-delete-key-方法"><span class="nav-text">1.3 delete(key) 方法</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-4-set-key-value-方法"><span class="nav-text">1.4 set(key, value) 方法</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-5-get-key-方法"><span class="nav-text">1.5 get(key) 方法</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-6-getAll-key-方法"><span class="nav-text">1.6 getAll(key) 方法</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-7-has-key-方法"><span class="nav-text">1.7 has(key) 方法</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-8-sort-方法"><span class="nav-text">1.8 sort() 方法</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-9-keys-方法"><span class="nav-text">1.9 keys() 方法</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-20-values-方法"><span class="nav-text">1.20 values() 方法</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-21-entries-方法"><span class="nav-text">1.21 entries() 方法</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-关于传入的参数注意问题"><span class="nav-text">2. 关于传入的参数注意问题</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="TanKingKhun"
+      src="https://avatars.githubusercontent.com/u/14145521?v=4">
+  <p class="site-author-name" itemprop="name">TanKingKhun</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">30</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">32</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/chenjk110" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;chenjk110" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:chenjk110@qq.com" title="E-Mail → mailto:chenjk110@qq.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      Links
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="http://www.wangjianfeng.net/" title="http:&#x2F;&#x2F;www.wangjianfeng.net&#x2F;" rel="noopener" target="_blank">YouSeeSeeMe</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://www.fidding.me/" title="http:&#x2F;&#x2F;www.fidding.me&#x2F;" rel="noopener" target="_blank">Fidding</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://zhujp.net/" title="http:&#x2F;&#x2F;zhujp.net&#x2F;" rel="noopener" target="_blank">Venus</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://toad.dev/" title="https:&#x2F;&#x2F;toad.dev&#x2F;" rel="noopener" target="_blank">Toad.Woo</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">TanKingKhun</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/theme-next/theme-next-pjax@0/pjax.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/velocity/1.2.1/velocity.min.js"></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/velocity/1.2.1/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+  <script>
+var pjax = new Pjax({
+  selectors: [
+    'head title',
+    '#page-configurations',
+    '.content-wrap',
+    '.post-toc-wrap',
+    '.languages',
+    '#pjax'
+  ],
+  switches: {
+    '.post-toc-wrap': Pjax.switches.innerHTML
+  },
+  analytics: false,
+  cacheBust: false,
+  scrollTo : !CONFIG.bookmark.enable
+});
+
+window.addEventListener('pjax:success', () => {
+  document.querySelectorAll('script[data-pjax], script#page-configurations, #pjax script').forEach(element => {
+    var code = element.text || element.textContent || element.innerHTML || '';
+    var parent = element.parentNode;
+    parent.removeChild(element);
+    var script = document.createElement('script');
+    if (element.id) {
+      script.id = element.id;
+    }
+    if (element.className) {
+      script.className = element.className;
+    }
+    if (element.type) {
+      script.type = element.type;
+    }
+    if (element.src) {
+      script.src = element.src;
+      // Force synchronous loading of peripheral JS.
+      script.async = false;
+    }
+    if (element.dataset.pjax !== undefined) {
+      script.dataset.pjax = '';
+    }
+    if (code !== '') {
+      script.appendChild(document.createTextNode(code));
+    }
+    parent.appendChild(script);
+  });
+  NexT.boot.refresh();
+  // Define Motion Sequence & Bootstrap Motion.
+  if (CONFIG.motion.enable) {
+    NexT.motion.integrator
+      .init()
+      .add(NexT.motion.middleWares.subMenu)
+      .add(NexT.motion.middleWares.postList)
+      .bootstrap();
+  }
+  NexT.utils.updateSidebarPosition();
+});
+</script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script data-pjax>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdnjs.cloudflare.com/ajax/libs/mermaid/8.4.8/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme    : 'forest',
+      logLevel : 3,
+      flowchart: { curve     : 'linear' },
+      gantt    : { axisFormat: '%m/%d/%Y' },
+      sequence : { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+    <div id="pjax">
+  
+
+  
+
+    </div>
+</body>
+</html>

@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"blog.dymox.top","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":true,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="1. 数据类型的拷贝基本数据类型在heap中是独份存在的，所有拷贝的方式可以直接以赋值形式完成： 1234567891011121314151617181920212223242526272829303132333435&#x2F;&#x2F; numberlet a &#x3D; 1let aa &#x3D; aa &#x3D; 0&#x2F;&#x2F; aa &#x3D;&#x3D;&#x3D; 1 -&gt; true&#x2F;&#x2F; stringlet b &#x3D; &#39;abc&#39;let bb &#x3D; bb &#x3D;">
+<meta property="og:type" content="article">
+<meta property="og:title" content="深拷贝函数的一些思考">
+<meta property="og:url" content="https://blog.dymox.top/2020/02/21/%E6%B7%B1%E6%8B%B7%E8%B4%9D%E5%87%BD%E6%95%B0%E7%9A%84%E4%B8%80%E4%BA%9B%E6%80%9D%E8%80%83/index.html">
+<meta property="og:site_name" content="TanKingKhun&#39;s Blog">
+<meta property="og:description" content="1. 数据类型的拷贝基本数据类型在heap中是独份存在的，所有拷贝的方式可以直接以赋值形式完成： 1234567891011121314151617181920212223242526272829303132333435&#x2F;&#x2F; numberlet a &#x3D; 1let aa &#x3D; aa &#x3D; 0&#x2F;&#x2F; aa &#x3D;&#x3D;&#x3D; 1 -&gt; true&#x2F;&#x2F; stringlet b &#x3D; &#39;abc&#39;let bb &#x3D; bb &#x3D;">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-02-21T16:00:22.000Z">
+<meta property="article:modified_time" content="2021-06-26T11:40:14.468Z">
+<meta property="article:author" content="TanKingKhun">
+<meta property="article:tag" content="算法">
+<meta property="article:tag" content="JS">
+<meta property="article:tag" content="深拷贝">
+<meta property="article:tag" content="deepClone">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://blog.dymox.top/2020/02/21/%E6%B7%B1%E6%8B%B7%E8%B4%9D%E5%87%BD%E6%95%B0%E7%9A%84%E4%B8%80%E4%BA%9B%E6%80%9D%E8%80%83/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>深拷贝函数的一些思考 | TanKingKhun's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">TanKingKhun's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.dymox.top/2020/02/21/%E6%B7%B1%E6%8B%B7%E8%B4%9D%E5%87%BD%E6%95%B0%E7%9A%84%E4%B8%80%E4%BA%9B%E6%80%9D%E8%80%83/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://avatars.githubusercontent.com/u/14145521?v=4">
+      <meta itemprop="name" content="TanKingKhun">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="TanKingKhun's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          深拷贝函数的一些思考
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-02-22 00:00:22" itemprop="dateCreated datePublished" datetime="2020-02-22T00:00:22+08:00">2020-02-22</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-06-26 19:40:14" itemprop="dateModified" datetime="2021-06-26T19:40:14+08:00">2021-06-26</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="1-数据类型的拷贝"><a href="#1-数据类型的拷贝" class="headerlink" title="1. 数据类型的拷贝"></a>1. 数据类型的拷贝</h1><p>基本数据类型在heap中是独份存在的，所有拷贝的方式可以直接以赋值形式完成：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// number</span></span><br><span class="line"><span class="keyword">let</span> a = <span class="number">1</span></span><br><span class="line"><span class="keyword">let</span> aa = a</span><br><span class="line">a = <span class="number">0</span></span><br><span class="line"><span class="comment">// aa === 1 -&gt; true</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// string</span></span><br><span class="line"><span class="keyword">let</span> b = <span class="string">'abc'</span></span><br><span class="line"><span class="keyword">let</span> bb = b</span><br><span class="line">b = <span class="string">'aaa'</span></span><br><span class="line"><span class="comment">// bb === 'abc' -&gt; true</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// boolean</span></span><br><span class="line"><span class="keyword">let</span> isChecked = <span class="literal">true</span></span><br><span class="line"><span class="keyword">let</span> checked = isChecked</span><br><span class="line">isChecked = <span class="literal">false</span></span><br><span class="line"><span class="comment">// checked === true -&gt; true</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// symbol</span></span><br><span class="line"><span class="keyword">let</span> s1 = <span class="built_in">Symbol</span>(<span class="string">'S1'</span>)</span><br><span class="line"><span class="keyword">let</span> s2 = s1</span><br><span class="line">s1 = <span class="built_in">Symbol</span>(<span class="string">'SS'</span>)</span><br><span class="line"><span class="comment">// s2.toString() -&gt; 'S1'</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// BigInt</span></span><br><span class="line"><span class="keyword">let</span> n1 = BigInt(<span class="number">9999999</span>)</span><br><span class="line"><span class="keyword">let</span> n2 = n1</span><br><span class="line">n1 = BigInt(<span class="number">12312312312323</span>)</span><br><span class="line"><span class="comment">// n2 === 9999999 -&gt; true</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// undefined</span></span><br><span class="line"><span class="keyword">let</span> u1 = <span class="literal">undefined</span></span><br><span class="line"><span class="keyword">let</span> u2 = u1</span><br><span class="line">u1 = <span class="number">0</span></span><br><span class="line"><span class="comment">// u2 === undefined -&gt; true</span></span><br></pre></td></tr></table></figure>
+
+<p>而对于引用类型如：Object、Array等，其值实际上为引用指针，所以当你以赋值方式进行复制操作时候，修改原始值，则会同步修改，让我们来了解下：</p>
+<h2 id="1-1-Array内容存在形式"><a href="#1-1-Array内容存在形式" class="headerlink" title="1.1 Array内容存在形式"></a>1.1 Array内容存在形式</h2><p>我们来初始化一个数组arr：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> arr = [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>]</span><br></pre></td></tr></table></figure>
+
+<p>假设内存中的值形式：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">|- arr -| - <span class="number">0x0000</span></span><br><span class="line">|-  <span class="number">1</span>  -| - <span class="number">0x0001</span></span><br><span class="line">|-  <span class="number">2</span>  -| - <span class="number">0x0002</span></span><br><span class="line">|-  <span class="number">3</span>  -| - <span class="number">0x0003</span></span><br></pre></td></tr></table></figure>
+
+<p>从上面可知，arr变量指针存放在<code>0x0000</code>的地址中, 其余的基本数据都存放于<code>0x0001</code>-<code>0x0003</code>中，那么，arr数组的内容则变为：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">arr -&gt; <span class="number">0x0000</span> = [e1, e2, e3]</span><br><span class="line"></span><br><span class="line"><span class="comment">// 等价于</span></span><br><span class="line">[</span><br><span class="line">  e1 -&gt; <span class="number">0x0001</span>,</span><br><span class="line">  e2 -&gt; <span class="number">0x0002</span>,</span><br><span class="line">  e3 -&gt; <span class="number">0x0003</span>,</span><br><span class="line">]</span><br><span class="line">  </span><br><span class="line"><span class="comment">// 等价于</span></span><br><span class="line">[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>]</span><br><span class="line"></span><br><span class="line"><span class="comment">// 最终就是我们表达中的 arr = [1, 2, 3]</span></span><br></pre></td></tr></table></figure>
+
+<p>好，接下来我们定义个新数组，并且将arr复制于新数组变量：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> arr2 = arr</span><br></pre></td></tr></table></figure>
+
+<p>此时发生的其实是将arr的引用地址(0x0000)复制与arr2，假设新的内存形式：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">|- arr  -| - <span class="number">0x0000</span></span><br><span class="line">|-  <span class="number">1</span>   -| - <span class="number">0x0001</span></span><br><span class="line">|-  <span class="number">2</span>   -| - <span class="number">0x0002</span></span><br><span class="line">|-  <span class="number">3</span>   -| - <span class="number">0x0003</span></span><br><span class="line">|- arr2 -| - <span class="number">0x0003</span></span><br></pre></td></tr></table></figure>
+
+<p>那么，其实arr2所对应的内存值是arr的空间地址(0x0000)，也就是：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">arr2 -&gt; <span class="number">0x0003</span> -&gt; <span class="number">0x0000</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 等价于</span></span><br><span class="line"></span><br><span class="line">arr2 -&gt; <span class="number">0x0000</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 等价于</span></span><br><span class="line"></span><br><span class="line">arr2 === arr</span><br></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">|- arr  -| - <span class="number">0x0000</span></span><br><span class="line">|-  <span class="number">1</span>   -| - <span class="number">0x0001</span></span><br><span class="line">|-  <span class="number">2</span>   -| - <span class="number">0x0002</span></span><br><span class="line">|-  <span class="number">3</span>   -| - <span class="number">0x0003</span></span><br><span class="line">|- <span class="number">0x0000</span> -| - <span class="number">0x0003</span> <span class="comment">// 指针形式</span></span><br></pre></td></tr></table></figure>
+
+<p>所以可以知道arr和arr2都是同时指向的0x0000这块地址，所以对arr修改内部元素，则arr2也发生了变化，因为是同一个地址内容：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">arr[<span class="number">0</span>] = <span class="number">-1</span></span><br><span class="line">arr2[<span class="number">0</span>] === <span class="number">-1</span> <span class="comment">// true</span></span><br></pre></td></tr></table></figure>
+
+<p>经过上面的修改后，新的内存值形式为：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">|- arr  -| - <span class="number">0x0000</span></span><br><span class="line">|- <span class="number">-1</span>   -| - <span class="number">0x0001</span></span><br><span class="line">|-  <span class="number">2</span>   -| - <span class="number">0x0002</span></span><br><span class="line">|-  <span class="number">3</span>   -| - <span class="number">0x0003</span></span><br><span class="line">|- <span class="number">0x0000</span> -| - <span class="number">0x0003</span> <span class="comment">// 指针形式</span></span><br></pre></td></tr></table></figure>
+
+<p>由上面的分析可以知道引用类型内部子元素其实都为指针形式，所以并并不能直接复制进行拷贝，而是需要新的容器内部重新去添加值：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> arr2 = []</span><br><span class="line"></span><br><span class="line"><span class="keyword">for</span>(<span class="keyword">let</span> i = <span class="number">0</span>; i &lt; arr.length; i++) &#123;</span><br><span class="line">  arr2[i] = arr[i]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>对应的内存形式为：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">|- arr  -| - <span class="number">0x0000</span></span><br><span class="line">|-  <span class="number">1</span>   -| - <span class="number">0x0001</span></span><br><span class="line">|-  <span class="number">2</span>   -| - <span class="number">0x0002</span></span><br><span class="line">|-  <span class="number">3</span>   -| - <span class="number">0x0003</span></span><br><span class="line">|- arr2 -| - <span class="number">0x0004</span></span><br></pre></td></tr></table></figure>
+
+<p>其中arr1的内存形式为：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">arr -&gt; <span class="number">0x0000</span> -&gt; [<span class="number">0x0001</span>, <span class="number">0x0002</span>, <span class="number">0x0003</span>]</span><br><span class="line"><span class="comment">// 等价于</span></span><br><span class="line">arr: [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>]</span><br><span class="line"></span><br><span class="line">arr2 -&gt; <span class="number">0x0003</span> -&gt; [<span class="number">0x0001</span>, <span class="number">0x0002</span>, <span class="number">0x0003</span>]</span><br><span class="line"><span class="comment">// 等价于</span></span><br><span class="line">arr2: [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>]</span><br></pre></td></tr></table></figure>
+
+<p>当我们对arr，arr2对任意元素进行修改时候，由于arr和arr2值并非为同一块地址空间，所以互不影响：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">arr[<span class="number">0</span>] = <span class="number">5</span></span><br><span class="line">arr2[<span class="number">2</span>] = <span class="number">5</span></span><br></pre></td></tr></table></figure>
+
+<p>内存形式为：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">|- arr  -| - <span class="number">0x0000</span></span><br><span class="line">|-  <span class="number">1</span>   -| - <span class="number">0x0001</span></span><br><span class="line">|-  <span class="number">2</span>   -| - <span class="number">0x0002</span></span><br><span class="line">|-  <span class="number">3</span>   -| - <span class="number">0x0003</span></span><br><span class="line">|- arr2 -| - <span class="number">0x0004</span></span><br><span class="line">|-  <span class="number">5</span>   -| - <span class="number">0x0005</span></span><br><span class="line"></span><br><span class="line">arr -&gt; <span class="number">0x0000</span> -&gt; [<span class="number">0x0005</span>, <span class="number">0x0002</span>, <span class="number">0x0003</span> ]</span><br><span class="line">arr2 -&gt; <span class="number">0x0004</span> -&gt; [<span class="number">0x0001</span>, <span class="number">0x0002</span>, <span class="number">0x0005</span> ]</span><br><span class="line"></span><br><span class="line"><span class="comment">// 等价于</span></span><br><span class="line"></span><br><span class="line">arr ==&gt; [<span class="number">5</span>, <span class="number">1</span>, <span class="number">2</span>]</span><br><span class="line">arr2 ==&gt; [<span class="number">1</span>, <span class="number">2</span>, <span class="number">5</span>]</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="2-2-Object内容存在形式"><a href="#2-2-Object内容存在形式" class="headerlink" title="2.2 Object内容存在形式"></a>2.2 Object内容存在形式</h2><p>对于Object类型其实道理和Array相同，毕竟Array是特殊的Object，Object中的属性值也是指向地址</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> o = &#123;</span><br><span class="line">  a: <span class="number">1</span>,</span><br><span class="line">  b; <span class="number">2</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>假设内存形式：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">|-  o   -| - <span class="number">0x0000</span></span><br><span class="line">|-  <span class="number">1</span>   -| - <span class="number">0x0001</span></span><br><span class="line">|-  <span class="number">2</span>   -| - <span class="number">0x0002</span></span><br></pre></td></tr></table></figure>
+
+<p>所o的指针形式可以这样来理解：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">o -&gt; <span class="number">0x0000</span> = &#123;&#125;</span><br><span class="line">a -&gt; <span class="number">0x0001</span> = <span class="number">1</span></span><br><span class="line">b -&gt; <span class="number">0x0002</span> = <span class="number">2</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 等价于</span></span><br><span class="line">o = &#123;</span><br><span class="line">  a: -&gt; <span class="number">0x0001</span>,</span><br><span class="line">  b: -&gt; <span class="number">0x0002</span>,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 等价于</span></span><br><span class="line">o = &#123;</span><br><span class="line">  a: <span class="number">1</span>,</span><br><span class="line">  b: <span class="number">2</span>,</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>对于引用类型的拷贝基本原则是：</p>
+<ol>
+<li>需要定义新的同类型值来充当容器，从而分离操作地址空间</li>
+<li>将新拷贝的值属性完全指待拷贝的值（仅假设其值为基本数据类型）</li>
+</ol>
+<h1 id="2-Array的常用拷贝方式"><a href="#2-Array的常用拷贝方式" class="headerlink" title="2 Array的常用拷贝方式"></a>2 Array的常用拷贝方式</h1><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> origin = [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>]</span><br><span class="line"><span class="keyword">const</span> copied = []</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="2-1-基本的遍历方式逐一拷贝"><a href="#2-1-基本的遍历方式逐一拷贝" class="headerlink" title="2.1 基本的遍历方式逐一拷贝"></a>2.1 基本的遍历方式逐一拷贝</h2><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// for</span></span><br><span class="line"><span class="keyword">for</span> (<span class="keyword">let</span> i = <span class="number">0</span>; i &lt; origin.length; i++) &#123;</span><br><span class="line">  copied.push(origin[i])</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// for-in</span></span><br><span class="line"><span class="keyword">for</span> (<span class="keyword">let</span> idx <span class="keyword">in</span> origin) &#123;</span><br><span class="line">  copied.push(origin[idx])</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// for-of</span></span><br><span class="line"><span class="keyword">for</span> (<span class="keyword">let</span> item <span class="keyword">of</span> origin) &#123;</span><br><span class="line">  copied.push(item)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// forEach</span></span><br><span class="line">origin.forEach(<span class="function"><span class="params">item</span> =&gt;</span> &#123;</span><br><span class="line">  copied.push(item)</span><br><span class="line">&#125;)</span><br><span class="line"></span><br><span class="line"><span class="comment">// map</span></span><br><span class="line">copied = origin.map(<span class="function"><span class="params">item</span> =&gt;</span> item)</span><br><span class="line"></span><br><span class="line"><span class="comment">// filter</span></span><br><span class="line">copied = origin.filter(<span class="function"><span class="params">()</span> =&gt;</span> <span class="literal">true</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment">// 扩展操作符</span></span><br><span class="line">copied = [...origin]</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="2-2-快速创建副本"><a href="#2-2-快速创建副本" class="headerlink" title="2.2 快速创建副本"></a>2.2 快速创建副本</h2><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// concat</span></span><br><span class="line">copied = origin.concat()</span><br><span class="line"></span><br><span class="line"><span class="comment">// slice</span></span><br><span class="line">copied = origin.slice()</span><br><span class="line"></span><br><span class="line"><span class="comment">// Array.from</span></span><br><span class="line">copied = <span class="built_in">Array</span>.form(origin)</span><br></pre></td></tr></table></figure>
+
+
+
+<h1 id="3-Object常用拷贝方式"><a href="#3-Object常用拷贝方式" class="headerlink" title="3 Object常用拷贝方式"></a>3 Object常用拷贝方式</h1><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> origin = &#123; <span class="attr">a</span>: <span class="number">1</span>, <span class="attr">b</span>: <span class="string">'hello'</span> &#125;</span><br><span class="line"><span class="keyword">const</span> copied = &#123;&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="3-1-偷懒的parse、stringify"><a href="#3-1-偷懒的parse、stringify" class="headerlink" title="3.1 偷懒的parse、stringify"></a>3.1 偷懒的parse、stringify</h2><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">copied = <span class="built_in">JSON</span>.parse(<span class="built_in">JSON</span>.stringify(origin))</span><br></pre></td></tr></table></figure>
+
+<p>这种方式虽然简单快速，但是有许多的问题：</p>
+<ol>
+<li>属性必须为enumerable，否则stringify将忽略</li>
+<li>属性必须为非undefined，否则stringify将忽略</li>
+<li>属性必须为非function，否则stringify将忽略</li>
+<li>不支持高级属性名类型，例如Symbol等，stringify将忽略</li>
+<li>不支持循环引用，stringify将报错</li>
+<li>性能问题，parse的解析过程</li>
+</ol>
+<p>这个方式在简单、数据结构单纯简单的时候可以轻量使用，从而快速实现对象拷贝</p>
+<h2 id="3-2-遍历属性拷贝"><a href="#3-2-遍历属性拷贝" class="headerlink" title="3.2 遍历属性拷贝"></a>3.2 遍历属性拷贝</h2><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// for-in</span></span><br><span class="line"><span class="keyword">for</span> (<span class="keyword">let</span> key <span class="keyword">in</span> origin) &#123;</span><br><span class="line">  copied[key] = origin[key]</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// for-of</span></span><br><span class="line"><span class="keyword">for</span> (pair <span class="keyword">of</span> origin.entries()) &#123;</span><br><span class="line">  <span class="keyword">const</span> [key, value] = pair</span><br><span class="line">  copied[key] = value</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// Object.keys</span></span><br><span class="line"><span class="built_in">Object</span>.keys(origin).forEach(<span class="function"><span class="params">key</span> =&gt;</span> copied[key] = origin[key])</span><br><span class="line"></span><br><span class="line"><span class="comment">// Object.entries</span></span><br><span class="line"><span class="built_in">Object</span>.entries(origin).forEach(<span class="function"><span class="params">pair</span> =&gt;</span> &#123;</span><br><span class="line">  <span class="keyword">const</span> [key, value] = pair</span><br><span class="line">  copied[key] = value</span><br><span class="line">&#125;)</span><br><span class="line"></span><br><span class="line"><span class="comment">// 展开操作符</span></span><br><span class="line">copied = &#123; ...origin &#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>注意</strong>：以上的遍历方式都将忽略不可枚举及继承的属性</p>
+<h2 id="3-3-Object-assign方法进行拷贝"><a href="#3-3-Object-assign方法进行拷贝" class="headerlink" title="3.3 Object.assign方法进行拷贝"></a>3.3 Object.assign方法进行拷贝</h2><p>通过Object.assign方式，将origin属性重新赋值到新的对象中，完成拷贝效果，而该方式也会和以上方式一样，忽略不可枚举的属性：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">copied = <span class="built_in">Object</span>.assign(&#123;&#125;, origin)</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="3-4-Object-getOwnPropertyNames进行拷贝"><a href="#3-4-Object-getOwnPropertyNames进行拷贝" class="headerlink" title="3.4 Object.getOwnPropertyNames进行拷贝"></a>3.4 Object.getOwnPropertyNames进行拷贝</h2><p>对于不可枚举的属性，有时候我们也想要完全拷贝，则使用该方法来实现拷贝:</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">Object</span>.getOwnPropertyNames(origin).forEach(<span class="function"><span class="params">key</span> =&gt;</span> &#123;</span><br><span class="line">  copied[key] = origin[key]</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+
+
+<p>但该方式会使得原来origin中不可枚举的属性配置丢失，所以需要结合<code>Object.getOwnPropertyDescriptor</code>和<code>Object.defineProperty</code>来进行拷贝，对上面代码进行修改：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">Object</span>.getOwnPropertyNames(origin).forEach(<span class="function"><span class="params">key</span> =&gt;</span> &#123;</span><br><span class="line">  <span class="comment">// 获取当前key在origin中对属性配置描述</span></span><br><span class="line">  <span class="keyword">const</span> descriptor = <span class="built_in">Object</span>.getOwnPropertyDescriptor(origin, key)</span><br><span class="line">  <span class="comment">// 定义copied的新值</span></span><br><span class="line">  <span class="built_in">Object</span>.defineProperty(copied, key, descriptor)</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="3-5-利用defineProperties，getOwnPropertyDescriptors拷贝"><a href="#3-5-利用defineProperties，getOwnPropertyDescriptors拷贝" class="headerlink" title="3.5 利用defineProperties，getOwnPropertyDescriptors拷贝"></a>3.5 利用defineProperties，getOwnPropertyDescriptors拷贝</h2><p>对于以上的方式，我们可以再利用<code>Object.defineProperties</code>和<code>Object.getOwnPropertyDescriptors</code>进行批量属性拷贝，从而精简代码：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> originPropDescs = <span class="built_in">Object</span>.getOwnPropertyDescriptors(origin)</span><br><span class="line"><span class="built_in">Object</span>.defineProperties(copied, originPropDescs)</span><br></pre></td></tr></table></figure>
+
+<p>该方式于<strong>3.4</strong>中的效果相同，也是支持获取不可枚举属性的变量名，但此方法去除了遍历添加的步骤，直接批量完成拷贝动作</p>
+<h1 id="4-多层级的引用类型拷贝"><a href="#4-多层级的引用类型拷贝" class="headerlink" title="4 多层级的引用类型拷贝"></a>4 多层级的引用类型拷贝</h1><p>以上的Array，Object拷贝方式主要实现为仅一层属性的浅拷贝，而当属性的值为引用类型的时候，需要递归以上拷贝步骤进行深层拷贝，所以这边主要是2个关键点：</p>
+<ol>
+<li>基本数据类型、null直接赋值拷贝</li>
+<li>Object, Array等数据类型进行递归拷贝</li>
+</ol>
+<h2 id="4-1-Array的多层级拷贝"><a href="#4-1-Array的多层级拷贝" class="headerlink" title="4.1 Array的多层级拷贝"></a>4.1 Array的多层级拷贝</h2><p>这边先假设Array中存在的引用类型仍为Array，后期对于其他的引用类型拷贝如Object则整合进去就行</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">deepCloneArray</span>(<span class="params">origin</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">const</span> copied = []</span><br><span class="line">  origin.forEach(<span class="function"><span class="params">item</span> =&gt;</span> &#123;</span><br><span class="line">    copied.push(<span class="built_in">Array</span>.isArray(item) </span><br><span class="line">      ? deepCloneArray(item) <span class="comment">// 递归</span></span><br><span class="line">      : item</span><br><span class="line">    )</span><br><span class="line">  &#125;)</span><br><span class="line">  <span class="keyword">return</span> copied</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="4-2-Object的多层级拷贝"><a href="#4-2-Object的多层级拷贝" class="headerlink" title="4.2 Object的多层级拷贝"></a>4.2 Object的多层级拷贝</h2><p>这边进行<strong>4.1</strong>一样的假设，先假设Object属性中的引用类型任为Object</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> isObject = <span class="function"><span class="params">o</span> =&gt;</span> <span class="built_in">Object</span>.prototype.toString.call(o) === <span class="string">'[object Object]'</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">deepCloneObject</span>(<span class="params">origin</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">const</span> res = &#123;&#125;</span><br><span class="line">  <span class="keyword">for</span> (<span class="keyword">const</span> key <span class="keyword">in</span> origin) &#123;</span><br><span class="line">    <span class="keyword">const</span> value = origin[key]</span><br><span class="line">    res[key] = isObject(value) </span><br><span class="line">     ? deepCloneObject(value)</span><br><span class="line">     : value</span><br><span class="line">  &#125;</span><br><span class="line">  </span><br><span class="line">  <span class="keyword">return</span> res</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="4-3-整合Object和Array深拷贝逻辑"><a href="#4-3-整合Object和Array深拷贝逻辑" class="headerlink" title="4.3 整合Object和Array深拷贝逻辑"></a>4.3 整合Object和Array深拷贝逻辑</h2><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 深拷贝函数</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">deepClone</span>(<span class="params">origin</span>) </span>&#123;  </span><br><span class="line">  <span class="keyword">if</span> (<span class="keyword">typeof</span> origin !== <span class="string">'object'</span> || origin === <span class="literal">null</span>)) &#123;</span><br><span class="line">    <span class="keyword">return</span> origin</span><br><span class="line">  &#125;</span><br><span class="line">  </span><br><span class="line">  <span class="keyword">const</span> copied = <span class="built_in">Array</span>.isArray(origin) ? [] : &#123;&#125;</span><br><span class="line">  </span><br><span class="line">  <span class="built_in">Object</span>.keys(origin).forEach(<span class="function"><span class="params">key</span> =&gt;</span> &#123;</span><br><span class="line">    copied[key] = deepClone(origin[key])</span><br><span class="line">  &#125;)</span><br><span class="line">  </span><br><span class="line">  <span class="keyword">return</span> copied</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="4-4-关于循环引用的处理"><a href="#4-4-关于循环引用的处理" class="headerlink" title="4.4 关于循环引用的处理"></a>4.4 关于循环引用的处理</h2><p>在<strong>4.3</strong>中的深拷贝函数中，当出现循环引用则会发生无限的递归调用，从而发生栈溢出错误，需要添加对循环引用的判断和处理，处理的关键逻辑为：</p>
+<ol>
+<li>创建一个cache数组用来存放引用类型值</li>
+<li>每次递归处理前先查找缓存</li>
+<li>发现缓存直接赋值、未发现缓存则添加缓存，并递归</li>
+</ol>
+<p>整理代码为：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 深拷贝函数</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">deepClone</span>(<span class="params">origin, cache = []</span>) </span>&#123;  </span><br><span class="line">  <span class="keyword">if</span> (<span class="keyword">typeof</span> origin !== <span class="string">'object'</span> || origin === <span class="literal">null</span>) &#123;</span><br><span class="line">    <span class="keyword">return</span> origin</span><br><span class="line">  &#125;</span><br><span class="line">  </span><br><span class="line">  <span class="comment">// 查找缓存</span></span><br><span class="line">  <span class="keyword">const</span> hit = cache.find(<span class="function"><span class="params">c</span> =&gt;</span> c.origin === origin)</span><br><span class="line">  </span><br><span class="line">  <span class="comment">// 返回缓存中的copied</span></span><br><span class="line">  <span class="keyword">if</span> (hit) &#123; <span class="keyword">return</span> hit.copied &#125;</span><br><span class="line">  </span><br><span class="line">  <span class="comment">// 根据数据类别创建副本</span></span><br><span class="line">  <span class="keyword">const</span> copied = <span class="built_in">Array</span>.isArray(origin) ? [] : &#123;&#125;</span><br><span class="line">  </span><br><span class="line">  <span class="comment">// 存入缓存</span></span><br><span class="line">  cache.push(&#123; origin, copied &#125;)</span><br><span class="line">  </span><br><span class="line">  <span class="comment">// 拷贝属性</span></span><br><span class="line">  <span class="built_in">Object</span>.keys(origin).forEach(<span class="function"><span class="params">key</span> =&gt;</span> &#123;</span><br><span class="line">    copied[key] = deepClone(origin[key], cache)</span><br><span class="line">  &#125;)</span><br><span class="line">  </span><br><span class="line">  <span class="keyword">return</span> copied</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <hr />
+  <h6>如果我的文章对你有帮助，可以请我喝杯咖啡哈~</h6>
+  <div id="qr" style="display: block;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/wechatpay.jpg" alt="TanKingKhun 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="/images/alipay.jpg" alt="TanKingKhun 支付宝">
+        <p>支付宝</p>
+      </div>
+  </div>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E7%AE%97%E6%B3%95/" rel="tag"># 算法</a>
+              <a href="/tags/JS/" rel="tag"># JS</a>
+              <a href="/tags/%E6%B7%B1%E6%8B%B7%E8%B4%9D/" rel="tag"># 深拷贝</a>
+              <a href="/tags/deepClone/" rel="tag"># deepClone</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2019/12/31/Homebrew%E5%AE%89%E8%A3%85MySQL/" rel="prev" title="Homebrew安装MySQL">
+      <i class="fa fa-chevron-left"></i> Homebrew安装MySQL
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2020/04/27/%E6%A8%A1%E6%8B%9FEventLoops%E6%9C%BA%E5%88%B6/" rel="next" title="模拟EventLoops机制">
+      模拟EventLoops机制 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#1-数据类型的拷贝"><span class="nav-text">1. 数据类型的拷贝</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-1-Array内容存在形式"><span class="nav-text">1.1 Array内容存在形式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-2-Object内容存在形式"><span class="nav-text">2.2 Object内容存在形式</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-Array的常用拷贝方式"><span class="nav-text">2 Array的常用拷贝方式</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#2-1-基本的遍历方式逐一拷贝"><span class="nav-text">2.1 基本的遍历方式逐一拷贝</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-2-快速创建副本"><span class="nav-text">2.2 快速创建副本</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#3-Object常用拷贝方式"><span class="nav-text">3 Object常用拷贝方式</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#3-1-偷懒的parse、stringify"><span class="nav-text">3.1 偷懒的parse、stringify</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-2-遍历属性拷贝"><span class="nav-text">3.2 遍历属性拷贝</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-3-Object-assign方法进行拷贝"><span class="nav-text">3.3 Object.assign方法进行拷贝</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-4-Object-getOwnPropertyNames进行拷贝"><span class="nav-text">3.4 Object.getOwnPropertyNames进行拷贝</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-5-利用defineProperties，getOwnPropertyDescriptors拷贝"><span class="nav-text">3.5 利用defineProperties，getOwnPropertyDescriptors拷贝</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#4-多层级的引用类型拷贝"><span class="nav-text">4 多层级的引用类型拷贝</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#4-1-Array的多层级拷贝"><span class="nav-text">4.1 Array的多层级拷贝</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-2-Object的多层级拷贝"><span class="nav-text">4.2 Object的多层级拷贝</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-3-整合Object和Array深拷贝逻辑"><span class="nav-text">4.3 整合Object和Array深拷贝逻辑</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-4-关于循环引用的处理"><span class="nav-text">4.4 关于循环引用的处理</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="TanKingKhun"
+      src="https://avatars.githubusercontent.com/u/14145521?v=4">
+  <p class="site-author-name" itemprop="name">TanKingKhun</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">30</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">32</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/chenjk110" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;chenjk110" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:chenjk110@qq.com" title="E-Mail → mailto:chenjk110@qq.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      Links
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="http://www.wangjianfeng.net/" title="http:&#x2F;&#x2F;www.wangjianfeng.net&#x2F;" rel="noopener" target="_blank">YouSeeSeeMe</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://www.fidding.me/" title="http:&#x2F;&#x2F;www.fidding.me&#x2F;" rel="noopener" target="_blank">Fidding</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://zhujp.net/" title="http:&#x2F;&#x2F;zhujp.net&#x2F;" rel="noopener" target="_blank">Venus</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://toad.dev/" title="https:&#x2F;&#x2F;toad.dev&#x2F;" rel="noopener" target="_blank">Toad.Woo</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">TanKingKhun</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/theme-next/theme-next-pjax@0/pjax.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/velocity/1.2.1/velocity.min.js"></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/velocity/1.2.1/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+  <script>
+var pjax = new Pjax({
+  selectors: [
+    'head title',
+    '#page-configurations',
+    '.content-wrap',
+    '.post-toc-wrap',
+    '.languages',
+    '#pjax'
+  ],
+  switches: {
+    '.post-toc-wrap': Pjax.switches.innerHTML
+  },
+  analytics: false,
+  cacheBust: false,
+  scrollTo : !CONFIG.bookmark.enable
+});
+
+window.addEventListener('pjax:success', () => {
+  document.querySelectorAll('script[data-pjax], script#page-configurations, #pjax script').forEach(element => {
+    var code = element.text || element.textContent || element.innerHTML || '';
+    var parent = element.parentNode;
+    parent.removeChild(element);
+    var script = document.createElement('script');
+    if (element.id) {
+      script.id = element.id;
+    }
+    if (element.className) {
+      script.className = element.className;
+    }
+    if (element.type) {
+      script.type = element.type;
+    }
+    if (element.src) {
+      script.src = element.src;
+      // Force synchronous loading of peripheral JS.
+      script.async = false;
+    }
+    if (element.dataset.pjax !== undefined) {
+      script.dataset.pjax = '';
+    }
+    if (code !== '') {
+      script.appendChild(document.createTextNode(code));
+    }
+    parent.appendChild(script);
+  });
+  NexT.boot.refresh();
+  // Define Motion Sequence & Bootstrap Motion.
+  if (CONFIG.motion.enable) {
+    NexT.motion.integrator
+      .init()
+      .add(NexT.motion.middleWares.subMenu)
+      .add(NexT.motion.middleWares.postList)
+      .bootstrap();
+  }
+  NexT.utils.updateSidebarPosition();
+});
+</script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script data-pjax>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdnjs.cloudflare.com/ajax/libs/mermaid/8.4.8/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme    : 'forest',
+      logLevel : 3,
+      flowchart: { curve     : 'linear' },
+      gantt    : { axisFormat: '%m/%d/%Y' },
+      sequence : { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+    <div id="pjax">
+  
+
+  
+
+    </div>
+</body>
+</html>

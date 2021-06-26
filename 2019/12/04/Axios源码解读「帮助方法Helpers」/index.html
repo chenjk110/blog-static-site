@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"blog.dymox.top","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":true,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="在helpers文件夹中有许多Axios会用到的帮助函数，这些大多数跟特定的流程有关，比如cookie，URL相关的操作，接下来我们一个一个来看下。 12345678910111213lib&#x2F;helpers  ├── README.md              # 说明  ├── bind.js                # 绑定函数上下文  ├── buildURL.js">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Axios源码解读「帮助方法Helpers」">
+<meta property="og:url" content="https://blog.dymox.top/2019/12/04/Axios%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB%E3%80%8C%E5%B8%AE%E5%8A%A9%E6%96%B9%E6%B3%95Helpers%E3%80%8D/index.html">
+<meta property="og:site_name" content="TanKingKhun&#39;s Blog">
+<meta property="og:description" content="在helpers文件夹中有许多Axios会用到的帮助函数，这些大多数跟特定的流程有关，比如cookie，URL相关的操作，接下来我们一个一个来看下。 12345678910111213lib&#x2F;helpers  ├── README.md              # 说明  ├── bind.js                # 绑定函数上下文  ├── buildURL.js">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2019-12-04T16:51:24.000Z">
+<meta property="article:modified_time" content="2021-06-26T11:40:14.444Z">
+<meta property="article:author" content="TanKingKhun">
+<meta property="article:tag" content="JavaScript">
+<meta property="article:tag" content="Axios">
+<meta property="article:tag" content="源码阅读">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://blog.dymox.top/2019/12/04/Axios%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB%E3%80%8C%E5%B8%AE%E5%8A%A9%E6%96%B9%E6%B3%95Helpers%E3%80%8D/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Axios源码解读「帮助方法Helpers」 | TanKingKhun's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">TanKingKhun's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.dymox.top/2019/12/04/Axios%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB%E3%80%8C%E5%B8%AE%E5%8A%A9%E6%96%B9%E6%B3%95Helpers%E3%80%8D/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://avatars.githubusercontent.com/u/14145521?v=4">
+      <meta itemprop="name" content="TanKingKhun">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="TanKingKhun's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Axios源码解读「帮助方法Helpers」
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-12-05 00:51:24" itemprop="dateCreated datePublished" datetime="2019-12-05T00:51:24+08:00">2019-12-05</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-06-26 19:40:14" itemprop="dateModified" datetime="2021-06-26T19:40:14+08:00">2021-06-26</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>在helpers文件夹中有许多Axios会用到的帮助函数，这些大多数跟特定的流程有关，比如cookie，URL相关的操作，接下来我们一个一个来看下。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">lib/helpers</span><br><span class="line">  ├── README.md              <span class="comment"># 说明</span></span><br><span class="line">  ├── bind.js                <span class="comment"># 绑定函数上下文</span></span><br><span class="line">  ├── buildURL.js            <span class="comment"># 创建URL字符串</span></span><br><span class="line">  ├── combineURLs.js         <span class="comment"># 将绝对URL和相对URL结合</span></span><br><span class="line">  ├── cookies.js             <span class="comment"># cookie操作相关</span></span><br><span class="line">  ├── deprecatedMethod.js    <span class="comment"># 提示Http方法不推荐使用</span></span><br><span class="line">  ├── isAbsoluteURL.js       <span class="comment"># 判断是否是绝对地址</span></span><br><span class="line">  ├── isURLSameOrigin.js     <span class="comment"># 判断是否相同主机</span></span><br><span class="line">  ├── isValidXss.js          <span class="comment"># 判断是否包含XSS的内容</span></span><br><span class="line">  ├── normalizeHeaderName.js <span class="comment"># 格式化Header的字段名</span></span><br><span class="line">  ├── parseHeaders.js        <span class="comment"># 解析Header字符串，返回解析对象</span></span><br><span class="line">  └── spread.js              <span class="comment"># 调用函数并传入参数数组</span></span><br></pre></td></tr></table></figure>
+
+<h1 id="1-bind-js"><a href="#1-bind-js" class="headerlink" title="1. bind.js"></a>1. bind.js</h1><p>实现了<code>Function.prototype.bind</code>特性的方法</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">module</span>.exports = <span class="function"><span class="keyword">function</span> <span class="title">bind</span>(<span class="params">fn, thisArg</span>) </span>&#123;</span><br><span class="line">  <span class="comment">// 利用闭包</span></span><br><span class="line">  <span class="keyword">return</span> <span class="function"><span class="keyword">function</span> <span class="title">wrap</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">    <span class="comment">// 将arguments值转换成args数组</span></span><br><span class="line">    <span class="keyword">var</span> args = <span class="keyword">new</span> <span class="built_in">Array</span>(<span class="built_in">arguments</span>.length);</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">var</span> i = <span class="number">0</span>; i &lt; args.length; i++) &#123;</span><br><span class="line">      args[i] = <span class="built_in">arguments</span>[i];</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 然后利用apply去调用</span></span><br><span class="line">    <span class="keyword">return</span> fn.apply(thisArg, args);</span><br><span class="line">  &#125;;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<h1 id="2-buildURL-js"><a href="#2-buildURL-js" class="headerlink" title="2. buildURL.js"></a>2. buildURL.js</h1><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> utils = <span class="built_in">require</span>(<span class="string">'./../utils'</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">// 转义URL，但保留部分符号</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">encode</span>(<span class="params">val</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">return</span> <span class="built_in">encodeURIComponent</span>(val).</span><br><span class="line">    replace(<span class="regexp">/%40/gi</span>, <span class="string">'@'</span>).</span><br><span class="line">    replace(<span class="regexp">/%3A/gi</span>, <span class="string">':'</span>).</span><br><span class="line">    replace(<span class="regexp">/%24/g</span>, <span class="string">'$'</span>).</span><br><span class="line">    replace(<span class="regexp">/%2C/gi</span>, <span class="string">','</span>).</span><br><span class="line">    replace(<span class="regexp">/%20/g</span>, <span class="string">'+'</span>).</span><br><span class="line">    replace(<span class="regexp">/%5B/gi</span>, <span class="string">'['</span>).</span><br><span class="line">    replace(<span class="regexp">/%5D/gi</span>, <span class="string">']'</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 将参数追加到URL后面形成新的URL地址</span></span><br><span class="line"><span class="built_in">module</span>.exports = <span class="function"><span class="keyword">function</span> <span class="title">buildURL</span>(<span class="params">url, params, paramsSerializer</span>) </span>&#123;</span><br><span class="line">  </span><br><span class="line">  <span class="comment">// 参数对象不存在则直接返回原始URL</span></span><br><span class="line">  <span class="keyword">if</span> (!params) &#123;</span><br><span class="line">    <span class="keyword">return</span> url;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">var</span> serializedParams; <span class="comment">// 定义参数query的字符串变量</span></span><br><span class="line">  </span><br><span class="line">  <span class="comment">// 1.使用传入自定义的序列化函数进行操作</span></span><br><span class="line">  <span class="keyword">if</span> (paramsSerializer) &#123;</span><br><span class="line">    serializedParams = paramsSerializer(params);</span><br><span class="line">   </span><br><span class="line">  <span class="comment">// 2.如果参数是个URLSearchParams事例，则直接调用toString()方法</span></span><br><span class="line">  &#125; <span class="keyword">else</span> <span class="keyword">if</span> (utils.isURLSearchParams(params)) &#123;</span><br><span class="line">    serializedParams = params.toString();</span><br><span class="line">    </span><br><span class="line">  <span class="comment">// 3.按照默认的方式进行参数序列号操作</span></span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="keyword">var</span> parts = []; <span class="comment">// 存放每个参数的序列化字符串</span></span><br><span class="line"></span><br><span class="line">    utils.forEach(params, <span class="function"><span class="keyword">function</span> <span class="title">serialize</span>(<span class="params">val, key</span>) </span>&#123;</span><br><span class="line">      <span class="comment">// 参数的值为空值，则直接跳过该参数</span></span><br><span class="line">      <span class="keyword">if</span> (val === <span class="literal">null</span> || <span class="keyword">typeof</span> val === <span class="string">'undefined'</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">      &#125;</span><br><span class="line">      </span><br><span class="line">      <span class="comment">// 若值是个数组，则修改key的格式，如：list -&gt; list[]</span></span><br><span class="line">      <span class="keyword">if</span> (utils.isArray(val)) &#123;</span><br><span class="line">        key = key + <span class="string">'[]'</span>;</span><br><span class="line">      &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        val = [val]; <span class="comment">// 构造成数组形式为了方便后续遍历</span></span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">      utils.forEach(val, <span class="function"><span class="keyword">function</span> <span class="title">parseValue</span>(<span class="params">v</span>) </span>&#123;</span><br><span class="line">        <span class="comment">// 值是Date类型，转换成ISO时间值文本</span></span><br><span class="line">        <span class="keyword">if</span> (utils.isDate(v)) &#123;</span><br><span class="line">          v = v.toISOString();</span><br><span class="line">        <span class="comment">// 值引用类型直接使用JSON序列化，例如，数组或者对象</span></span><br><span class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> (utils.isObject(v)) &#123;</span><br><span class="line">          v = <span class="built_in">JSON</span>.stringify(v); </span><br><span class="line">        &#125;</span><br><span class="line">        </span><br><span class="line">        <span class="comment">// 存放序列化后的字符串，例如： 'a=123' 或者 'list[]=[1,2,3]'</span></span><br><span class="line">        parts.push(encode(key) + <span class="string">'='</span> + encode(v));</span><br><span class="line">      &#125;);</span><br><span class="line">    &#125;);</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 用`&amp;`连接query字符对</span></span><br><span class="line">    <span class="comment">// 例如：['a=1', 'b=2'] =&gt; 'a=1&amp;b=2'</span></span><br><span class="line">    serializedParams = parts.join(<span class="string">'&amp;'</span>); </span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> (serializedParams) &#123;</span><br><span class="line">    <span class="keyword">var</span> hashmarkIndex = url.indexOf(<span class="string">'#'</span>);</span><br><span class="line">    <span class="keyword">if</span> (hashmarkIndex !== <span class="number">-1</span>) &#123;</span><br><span class="line">      <span class="comment">// 有hash则去掉hash信息</span></span><br><span class="line">      url = url.slice(<span class="number">0</span>, hashmarkIndex);</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 将query字符串拼接到URL后面</span></span><br><span class="line">    url += (url.indexOf(<span class="string">'?'</span>) === <span class="number">-1</span> ? <span class="string">'?'</span> : <span class="string">'&amp;'</span>) + serializedParams;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">return</span> url;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<h1 id="3-combineURL-js"><a href="#3-combineURL-js" class="headerlink" title="3. combineURL.js"></a>3. combineURL.js</h1><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">module</span>.exports = <span class="function"><span class="keyword">function</span> <span class="title">combineURLs</span>(<span class="params">baseURL, relativeURL</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">return</span> relativeURL</span><br><span class="line">  	<span class="comment">// 这步骤为了保证中间连接的只有一个`/`分隔符</span></span><br><span class="line">    ? baseURL.replace(<span class="regexp">/\/+$/</span>, <span class="string">''</span>) + <span class="string">'/'</span> + relativeURL.replace(<span class="regexp">/^\/+/</span>, <span class="string">''</span>)</span><br><span class="line">    : baseURL; <span class="comment">// 没有相对URL则直接返回基础URL</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>去除基础URL的尾部<code>/</code>，去除相对URL的开头<code>/</code>, 然后在用<code>/</code>符号进行拼接，形成新的URL，这样的操作是为了</p>
+<h1 id="4-isAbsoluteURL-js"><a href="#4-isAbsoluteURL-js" class="headerlink" title="4. isAbsoluteURL.js"></a>4. isAbsoluteURL.js</h1><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">module</span>.exports = <span class="function"><span class="keyword">function</span> <span class="title">isAbsoluteURL</span>(<span class="params">url</span>) </span>&#123;</span><br><span class="line">  <span class="comment">// 根据协议头确定是否为绝对URL</span></span><br><span class="line">  <span class="comment">// 例如： http://xxx.xxx.xxx, //aaa.aaa.aa</span></span><br><span class="line">  <span class="keyword">return</span> <span class="regexp">/^([a-z][a-z\d\+\-\.]*:)?\/\//i</span>.test(url);</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<h1 id="5-isURLSameOrigin-js"><a href="#5-isURLSameOrigin-js" class="headerlink" title="5. isURLSameOrigin.js"></a>5. isURLSameOrigin.js</h1><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> utils = <span class="built_in">require</span>(<span class="string">'./../utils'</span>);</span><br><span class="line"><span class="keyword">var</span> isValidXss = <span class="built_in">require</span>(<span class="string">'./isValidXss'</span>);</span><br><span class="line"></span><br><span class="line"><span class="built_in">module</span>.exports = (</span><br><span class="line">  utils.isStandardBrowserEnv() ?</span><br><span class="line">    (<span class="function"><span class="keyword">function</span> <span class="title">standardBrowserEnv</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">    </span><br><span class="line">      <span class="comment">// IE内核检测</span></span><br><span class="line">      <span class="keyword">var</span> msie = <span class="regexp">/(msie|trident)/i</span>.test(navigator.userAgent);</span><br><span class="line">      </span><br><span class="line">      <span class="comment">// 创建一个空的&lt;a /&gt;标签element，用来解析href</span></span><br><span class="line">      <span class="keyword">var</span> urlParsingNode = <span class="built_in">document</span>.createElement(<span class="string">'a'</span>);</span><br><span class="line">      <span class="keyword">var</span> originURL;</span><br><span class="line"></span><br><span class="line">      <span class="comment">// 通过&lt;a href=&#123;url&#125; /&gt;标签来解析URL</span></span><br><span class="line">      <span class="function"><span class="keyword">function</span> <span class="title">resolveURL</span>(<span class="params">url</span>) </span>&#123;</span><br><span class="line">        <span class="keyword">var</span> href = url;</span><br><span class="line">        </span><br><span class="line">        <span class="comment">// 检查是否包含XSS脚步攻击信息</span></span><br><span class="line">        <span class="keyword">if</span> (isValidXss(url)) &#123;</span><br><span class="line">          <span class="keyword">throw</span> <span class="keyword">new</span> <span class="built_in">Error</span>(<span class="string">'URL contains XSS injection attempt'</span>);</span><br><span class="line">        &#125;</span><br><span class="line">      </span><br><span class="line">        <span class="keyword">if</span> (msie) &#123;</span><br><span class="line">          <span class="comment">// IE 需要设置两次的原生属性</span></span><br><span class="line">          urlParsingNode.setAttribute(<span class="string">'href'</span>, href);</span><br><span class="line">          href = urlParsingNode.href;</span><br><span class="line">        &#125;</span><br><span class="line">        </span><br><span class="line">        <span class="comment">// 将a标签的href设置为url，则会自动完成解析，</span></span><br><span class="line">        urlParsingNode.setAttribute(<span class="string">'href'</span>, href);</span><br><span class="line">        </span><br><span class="line">        <span class="comment">// 返回的数据对象为URL接口规定的信息</span></span><br><span class="line">        <span class="comment">// 其实这边可以利用URL()来解析</span></span><br><span class="line">        <span class="comment">// 使用&lt;a /&gt;提高兼容性</span></span><br><span class="line">        <span class="keyword">return</span> &#123;</span><br><span class="line">          <span class="comment">/* 原始链接 */</span></span><br><span class="line">          href: urlParsingNode.href,</span><br><span class="line">          <span class="comment">/* 协议 */</span></span><br><span class="line">          protocol: urlParsingNode.protocol </span><br><span class="line">             ? urlParsingNode.protocol.replace(<span class="regexp">/:$/</span>, <span class="string">''</span>) </span><br><span class="line">             : <span class="string">''</span>,</span><br><span class="line">          <span class="comment">/* 主机 */</span></span><br><span class="line">          host: urlParsingNode.host,</span><br><span class="line">          <span class="comment">/* query的字符串 */</span></span><br><span class="line">          search: urlParsingNode.search </span><br><span class="line">            ? urlParsingNode.search.replace(<span class="regexp">/^\?/</span>, <span class="string">''</span>) </span><br><span class="line">            : <span class="string">''</span>,</span><br><span class="line">          <span class="comment">/* 锚点 */</span></span><br><span class="line">          hash: urlParsingNode.hash </span><br><span class="line">            ? urlParsingNode.hash.replace(<span class="regexp">/^#/</span>, <span class="string">''</span>) </span><br><span class="line">            : <span class="string">''</span>,</span><br><span class="line">          <span class="comment">/* 主机名 */</span></span><br><span class="line">          hostname: urlParsingNode.hostname,</span><br><span class="line">          <span class="comment">/* 端口 */</span></span><br><span class="line">          port: urlParsingNode.port,</span><br><span class="line">          <span class="comment">/* 子路径 */</span></span><br><span class="line">          pathname: (urlParsingNode.pathname.charAt(<span class="number">0</span>) === <span class="string">'/'</span>) </span><br><span class="line">            ? urlParsingNode.pathname </span><br><span class="line">            : <span class="string">'/'</span> + urlParsingNode.pathname</span><br><span class="line">        &#125;;</span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">      originURL = resolveURL(<span class="built_in">window</span>.location.href);</span><br><span class="line"></span><br><span class="line">     	<span class="comment">// 相同主机则协议和主机都得一直</span></span><br><span class="line">      <span class="keyword">return</span> <span class="function"><span class="keyword">function</span> <span class="title">isURLSameOrigin</span>(<span class="params">requestURL</span>) </span>&#123;</span><br><span class="line">        <span class="keyword">var</span> parsed = (utils.isString(requestURL)) </span><br><span class="line">          ? resolveURL(requestURL) </span><br><span class="line">          : requestURL;</span><br><span class="line">          </span><br><span class="line">        <span class="keyword">return</span> (parsed.protocol === originURL.protocol &amp;&amp;</span><br><span class="line">            parsed.host === originURL.host);</span><br><span class="line">      &#125;;</span><br><span class="line">    &#125;)() :</span><br><span class="line"></span><br><span class="line">    (<span class="function"><span class="keyword">function</span> <span class="title">nonStandardBrowserEnv</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">      <span class="keyword">return</span> <span class="function"><span class="keyword">function</span> <span class="title">isURLSameOrigin</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">      &#125;;</span><br><span class="line">    &#125;)()</span><br><span class="line">);</span><br></pre></td></tr></table></figure>
+<p>除了这种方式去解析一条url，也可以使用正则去匹配，还有就是利用<code>URL()</code>接口去实现，当然，作者的这种方式会更加取巧，也是看了这部分代码才了解此用法。</p>
+<h1 id="6-isValidXss-js"><a href="#6-isValidXss-js" class="headerlink" title="6. isValidXss.js"></a>6. isValidXss.js</h1><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">module</span>.exports = <span class="function"><span class="keyword">function</span> <span class="title">isValidXss</span>(<span class="params">requestURL</span>) </span>&#123;</span><br><span class="line">  <span class="comment">// 检测包含XSS脚步攻击内容</span></span><br><span class="line">  <span class="comment">// 1. 以on开头的事件回调，如：onclick=</span></span><br><span class="line">  <span class="comment">// 2. 包含javascript</span></span><br><span class="line">  <span class="comment">// 3. &lt;script 或者 &lt;/script</span></span><br><span class="line">  <span class="keyword">var</span> xssRegex = <span class="regexp">/(\b)(on\w+)=|javascript|(&lt;\s*)(\/*)script/gi</span>;</span><br><span class="line">  <span class="keyword">return</span> xssRegex.test(requestURL);</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<h1 id="7-deprecatedMethod-js"><a href="#7-deprecatedMethod-js" class="headerlink" title="7. deprecatedMethod.js"></a>7. deprecatedMethod.js</h1><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">module</span>.exports = <span class="function"><span class="keyword">function</span> <span class="title">deprecatedMethod</span>(<span class="params">method, instead, docs</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">try</span> &#123;</span><br><span class="line">    <span class="built_in">console</span>.warn(</span><br><span class="line">      <span class="string">'DEPRECATED method `'</span> + method + <span class="string">'`.'</span> +</span><br><span class="line">      (instead ? <span class="string">' Use `'</span> + instead + <span class="string">'` instead.'</span> : <span class="string">''</span>) +</span><br><span class="line">      <span class="string">' This method will be removed in a future release.'</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (docs) &#123;</span><br><span class="line">      <span class="built_in">console</span>.warn(<span class="string">'For more information about usage see '</span> + docs);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125; <span class="keyword">catch</span> (e) &#123; <span class="comment">/* Ignore */</span> &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>创建提示语专用函数</p>
+<h1 id="8-cookies-js"><a href="#8-cookies-js" class="headerlink" title="8. cookies.js"></a>8. cookies.js</h1><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> utils = <span class="built_in">require</span>(<span class="string">'./../utils'</span>);</span><br><span class="line"></span><br><span class="line"><span class="built_in">module</span>.exports = (</span><br><span class="line">  utils.isStandardBrowserEnv() ?</span><br><span class="line">    <span class="comment">// 标准web环境支持document.cookie</span></span><br><span class="line">    (<span class="function"><span class="keyword">function</span> <span class="title">standardBrowserEnv</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">      <span class="keyword">return</span> &#123;</span><br><span class="line">        <span class="comment">// 写入</span></span><br><span class="line">        write: <span class="function"><span class="keyword">function</span> <span class="title">write</span>(<span class="params"></span></span></span><br><span class="line"><span class="function"><span class="params">           name, value, expires, path, domain, secure</span></span></span><br><span class="line"><span class="function"><span class="params">        </span>) </span>&#123;</span><br><span class="line">          <span class="keyword">var</span> cookie = [];</span><br><span class="line">          </span><br><span class="line">          <span class="comment">// 一下步骤则是根据key的类别构建 "key=value"形式键值对</span></span><br><span class="line">          cookie.push(name + <span class="string">'='</span> + <span class="built_in">encodeURIComponent</span>(value));</span><br><span class="line">          <span class="keyword">if</span> (utils.isNumber(expires)) &#123;</span><br><span class="line">            cookie.push(<span class="string">'expires='</span> + <span class="keyword">new</span> <span class="built_in">Date</span>(expires).toGMTString());</span><br><span class="line">          &#125;</span><br><span class="line"></span><br><span class="line">          <span class="keyword">if</span> (utils.isString(path)) &#123;</span><br><span class="line">            cookie.push(<span class="string">'path='</span> + path);</span><br><span class="line">          &#125;</span><br><span class="line"></span><br><span class="line">          <span class="keyword">if</span> (utils.isString(domain)) &#123;</span><br><span class="line">            cookie.push(<span class="string">'domain='</span> + domain);</span><br><span class="line">          &#125;</span><br><span class="line"></span><br><span class="line">          <span class="keyword">if</span> (secure === <span class="literal">true</span>) &#123;</span><br><span class="line">            cookie.push(<span class="string">'secure'</span>);</span><br><span class="line">          &#125;</span><br><span class="line">          </span><br><span class="line">          <span class="comment">// 最后写入到document.cookie中，修改直接赋值替换就行</span></span><br><span class="line">          <span class="built_in">document</span>.cookie = cookie.join(<span class="string">'; '</span>);</span><br><span class="line">        &#125;,</span><br><span class="line">        </span><br><span class="line">        <span class="comment">// 读取</span></span><br><span class="line">        read: <span class="function"><span class="keyword">function</span> <span class="title">read</span>(<span class="params">name</span>) </span>&#123;</span><br><span class="line">          <span class="keyword">var</span> match = <span class="built_in">document</span>.cookie.match(</span><br><span class="line">            <span class="comment">// 在cookie字符串中匹配对应key=value</span></span><br><span class="line">            <span class="keyword">new</span> <span class="built_in">RegExp</span>(<span class="string">'(^|;\\s*)('</span> + name + <span class="string">')=([^;]*)'</span>)</span><br><span class="line">          );</span><br><span class="line">          </span><br><span class="line">          <span class="keyword">return</span> (match ? <span class="built_in">decodeURIComponent</span>(match[<span class="number">3</span>]) : <span class="literal">null</span>);</span><br><span class="line">        &#125;,</span><br><span class="line">        </span><br><span class="line">        <span class="comment">// 删除</span></span><br><span class="line">        remove: <span class="function"><span class="keyword">function</span> <span class="title">remove</span>(<span class="params">name</span>) </span>&#123;</span><br><span class="line">          <span class="comment">// 设置值为'', 过期时间为24小时前</span></span><br><span class="line">          <span class="keyword">this</span>.write(name, <span class="string">''</span>, <span class="built_in">Date</span>.now() - <span class="number">86400000</span>);</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;;</span><br><span class="line">    &#125;)() :</span><br><span class="line">     </span><br><span class="line">     <span class="comment">// 非标准web环境</span></span><br><span class="line">    (<span class="function"><span class="keyword">function</span> <span class="title">nonStandardBrowserEnv</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">      <span class="keyword">return</span> &#123;</span><br><span class="line">        write: <span class="function"><span class="keyword">function</span> <span class="title">write</span>(<span class="params"></span>) </span>&#123;&#125;,</span><br><span class="line">        read: <span class="function"><span class="keyword">function</span> <span class="title">read</span>(<span class="params"></span>) </span>&#123; <span class="keyword">return</span> <span class="literal">null</span>; &#125;,</span><br><span class="line">        remove: <span class="function"><span class="keyword">function</span> <span class="title">remove</span>(<span class="params"></span>) </span>&#123;&#125;</span><br><span class="line">      &#125;;</span><br><span class="line">    &#125;)()</span><br><span class="line">);</span><br></pre></td></tr></table></figure>
+
+<h1 id="9-parseHeaders-js"><a href="#9-parseHeaders-js" class="headerlink" title="9. parseHeaders.js"></a>9. parseHeaders.js</h1><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> utils = <span class="built_in">require</span>(<span class="string">'./../utils'</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">// 这些字段的header值如果有多个，则只保留一个值、其他值会被忽略</span></span><br><span class="line"><span class="keyword">var</span> ignoreDuplicateOf = [</span><br><span class="line">  <span class="string">'age'</span>, <span class="string">'authorization'</span>, <span class="string">'content-length'</span>, <span class="string">'content-type'</span>, <span class="string">'etag'</span>,</span><br><span class="line">  <span class="string">'expires'</span>, <span class="string">'from'</span>, <span class="string">'host'</span>, <span class="string">'if-modified-since'</span>, <span class="string">'if-unmodified-since'</span>,</span><br><span class="line">  <span class="string">'last-modified'</span>, <span class="string">'location'</span>, <span class="string">'max-forwards'</span>, <span class="string">'proxy-authorization'</span>,</span><br><span class="line">  <span class="string">'referer'</span>, <span class="string">'retry-after'</span>, <span class="string">'user-agent'</span></span><br><span class="line">];</span><br><span class="line"></span><br><span class="line"><span class="comment">// 解析headers文本为Object形式</span></span><br><span class="line"><span class="built_in">module</span>.exports = <span class="function"><span class="keyword">function</span> <span class="title">parseHeaders</span>(<span class="params">headers</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">var</span> parsed = &#123;&#125;;</span><br><span class="line">  <span class="keyword">var</span> key;</span><br><span class="line">  <span class="keyword">var</span> val;</span><br><span class="line">  <span class="keyword">var</span> i;</span><br><span class="line">  </span><br><span class="line">  <span class="keyword">if</span> (!headers) &#123; <span class="keyword">return</span> parsed; &#125;</span><br><span class="line">  </span><br><span class="line">  <span class="comment">// 根据'\n'将分割成独立的行，然后遍历去解析取值</span></span><br><span class="line">  utils.forEach(headers.split(<span class="string">'\n'</span>), <span class="function"><span class="keyword">function</span> <span class="title">parser</span>(<span class="params">line</span>) </span>&#123;</span><br><span class="line">    i = line.indexOf(<span class="string">':'</span>);</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// ':'的左侧为key</span></span><br><span class="line">    key = utils.trim(line.substr(<span class="number">0</span>, i)).toLowerCase();</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// ':'的右侧为val</span></span><br><span class="line">    val = utils.trim(line.substr(i + <span class="number">1</span>));</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (key) &#123;</span><br><span class="line">      <span class="comment">// 已存在值并且字段为单一值的头部字段，则不进行进一步动作</span></span><br><span class="line">      <span class="keyword">if</span> (parsed[key] &amp;&amp; ignoreDuplicateOf.indexOf(key) &gt;= <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">      &#125;</span><br><span class="line">      </span><br><span class="line">      <span class="comment">// set-cookie的格式解析, set-cookie多个值则为数组</span></span><br><span class="line">      <span class="keyword">if</span> (key === <span class="string">'set-cookie'</span>) &#123;</span><br><span class="line">        parsed[key] = (parsed[key] ? parsed[key] : []).concat([val]);</span><br><span class="line">        </span><br><span class="line">      <span class="comment">// 其他格式的解析， 多个值用','隔开</span></span><br><span class="line">      &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        parsed[key] = parsed[key] ? parsed[key] + <span class="string">', '</span> + val : val;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;);</span><br><span class="line"></span><br><span class="line">  <span class="keyword">return</span> parsed;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<h1 id="10-normalizeHeaderName-js"><a href="#10-normalizeHeaderName-js" class="headerlink" title="10. normalizeHeaderName.js"></a>10. normalizeHeaderName.js</h1><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 将headers中的name常规化</span></span><br><span class="line"><span class="built_in">module</span>.exports = <span class="function"><span class="keyword">function</span> <span class="title">normalizeHeaderName</span>(<span class="params">headers, normalizedName</span>) </span>&#123;</span><br><span class="line">  utils.forEach(headers, <span class="function"><span class="keyword">function</span> <span class="title">processHeader</span>(<span class="params">value, name</span>) </span>&#123;</span><br><span class="line">  </span><br><span class="line">    <span class="comment">// 数据中的name和传入的normalizedName大小写不一致， 统一转化成大写，</span></span><br><span class="line">    <span class="keyword">if</span> (name !== normalizedName</span><br><span class="line">      &amp;&amp; name.toUpperCase() === normalizedName.toUpperCase()</span><br><span class="line">    ) &#123;</span><br><span class="line">      headers[normalizedName] = value; <span class="comment">// 将normalizedName设置成为新key</span></span><br><span class="line">      <span class="keyword">delete</span> headers[name]; <span class="comment">// 删除原始的key</span></span><br><span class="line">    &#125;</span><br><span class="line">  &#125;);</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* 例如 */</span></span><br><span class="line"><span class="keyword">const</span> headers = &#123; <span class="string">'content-type'</span>: <span class="string">'application/json'</span> &#125;</span><br><span class="line">normalizeHeaderName(headers, <span class="string">'Content-Type'</span>)</span><br><span class="line"></span><br><span class="line">headers <span class="comment">// -&gt; &#123; 'Content-Type': 'application/json' &#125;</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 这样就将'content-type'正常化为'Content-Type'</span></span><br></pre></td></tr></table></figure>
+
+<h1 id="11-spread-js"><a href="#11-spread-js" class="headerlink" title="11. spread.js"></a>11. spread.js</h1><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> *  function f(x, y, z) &#123;&#125;</span></span><br><span class="line"><span class="comment"> *  var args = [1, 2, 3];</span></span><br><span class="line"><span class="comment"> *  f.apply(null, args);</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * 形式转换</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> *  spread(function(x, y, z) &#123;&#125;)([1, 2, 3]);</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="comment">// 这个函数没什么特殊的，就是方便apply调用</span></span><br><span class="line"><span class="built_in">module</span>.exports = <span class="function"><span class="keyword">function</span> <span class="title">spread</span>(<span class="params">callback</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">return</span> <span class="function"><span class="keyword">function</span> <span class="title">wrap</span>(<span class="params">arr</span>) </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> callback.apply(<span class="literal">null</span>, arr);</span><br><span class="line">  &#125;;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+
+<h1 id="文档链接："><a href="#文档链接：" class="headerlink" title="文档链接："></a>文档链接：</h1><p><a href="../Axios源码解读「整体代码文件结构说明」">Axios源码解读「整体代码文件结构说明」</a><br><a href="../Axios源码解读「帮助方法Helpers」">Axios源码解读「帮助方法Helpers」</a><br><a href="../Axios源码解读「通用工具函数」">Axios源码解读「通用工具函数」</a><br><a href="../Axios源码解读「适配器Adapter」">Axios源码解读「适配器Adapter」</a><br><a href="../Axios源码解读「实现请求的取消中断Cancel」">Axios源码解读「实现请求的取消中断Cancel」</a><br><a href="../Axios源码解读「默认配置项default」">Axios源码解读「默认配置项default」</a><br><a href="../Axios源码解读「核心逻辑部分Core」">Axios源码解读「核心逻辑部分Core」</a><br><a href="../Axios源码解读「静态API的注入」">Axios源码解读「静态API的注入」</a></p>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <hr />
+  <h6>如果我的文章对你有帮助，可以请我喝杯咖啡哈~</h6>
+  <div id="qr" style="display: block;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/wechatpay.jpg" alt="TanKingKhun 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="/images/alipay.jpg" alt="TanKingKhun 支付宝">
+        <p>支付宝</p>
+      </div>
+  </div>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/JavaScript/" rel="tag"># JavaScript</a>
+              <a href="/tags/Axios/" rel="tag"># Axios</a>
+              <a href="/tags/%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB/" rel="tag"># 源码阅读</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2019/12/04/Axios%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB%E3%80%8C%E9%BB%98%E8%AE%A4%E9%85%8D%E7%BD%AE%E9%A1%B9default%E3%80%8D/" rel="prev" title="Axios源码解读「默认配置项default」">
+      <i class="fa fa-chevron-left"></i> Axios源码解读「默认配置项default」
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2019/12/20/%E5%AE%9E%E7%8E%B0%E4%B8%80%E4%B8%AA%E6%A8%A1%E6%8B%9F%E6%97%B6%E9%92%9F/" rel="next" title="实现一个模拟时钟">
+      实现一个模拟时钟 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#1-bind-js"><span class="nav-text">1. bind.js</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-buildURL-js"><span class="nav-text">2. buildURL.js</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#3-combineURL-js"><span class="nav-text">3. combineURL.js</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#4-isAbsoluteURL-js"><span class="nav-text">4. isAbsoluteURL.js</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#5-isURLSameOrigin-js"><span class="nav-text">5. isURLSameOrigin.js</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#6-isValidXss-js"><span class="nav-text">6. isValidXss.js</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#7-deprecatedMethod-js"><span class="nav-text">7. deprecatedMethod.js</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#8-cookies-js"><span class="nav-text">8. cookies.js</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#9-parseHeaders-js"><span class="nav-text">9. parseHeaders.js</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#10-normalizeHeaderName-js"><span class="nav-text">10. normalizeHeaderName.js</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#11-spread-js"><span class="nav-text">11. spread.js</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#文档链接："><span class="nav-text">文档链接：</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="TanKingKhun"
+      src="https://avatars.githubusercontent.com/u/14145521?v=4">
+  <p class="site-author-name" itemprop="name">TanKingKhun</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">30</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">32</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/chenjk110" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;chenjk110" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:chenjk110@qq.com" title="E-Mail → mailto:chenjk110@qq.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      Links
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="http://www.wangjianfeng.net/" title="http:&#x2F;&#x2F;www.wangjianfeng.net&#x2F;" rel="noopener" target="_blank">YouSeeSeeMe</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://www.fidding.me/" title="http:&#x2F;&#x2F;www.fidding.me&#x2F;" rel="noopener" target="_blank">Fidding</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://zhujp.net/" title="http:&#x2F;&#x2F;zhujp.net&#x2F;" rel="noopener" target="_blank">Venus</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://toad.dev/" title="https:&#x2F;&#x2F;toad.dev&#x2F;" rel="noopener" target="_blank">Toad.Woo</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">TanKingKhun</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/theme-next/theme-next-pjax@0/pjax.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/velocity/1.2.1/velocity.min.js"></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/velocity/1.2.1/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+  <script>
+var pjax = new Pjax({
+  selectors: [
+    'head title',
+    '#page-configurations',
+    '.content-wrap',
+    '.post-toc-wrap',
+    '.languages',
+    '#pjax'
+  ],
+  switches: {
+    '.post-toc-wrap': Pjax.switches.innerHTML
+  },
+  analytics: false,
+  cacheBust: false,
+  scrollTo : !CONFIG.bookmark.enable
+});
+
+window.addEventListener('pjax:success', () => {
+  document.querySelectorAll('script[data-pjax], script#page-configurations, #pjax script').forEach(element => {
+    var code = element.text || element.textContent || element.innerHTML || '';
+    var parent = element.parentNode;
+    parent.removeChild(element);
+    var script = document.createElement('script');
+    if (element.id) {
+      script.id = element.id;
+    }
+    if (element.className) {
+      script.className = element.className;
+    }
+    if (element.type) {
+      script.type = element.type;
+    }
+    if (element.src) {
+      script.src = element.src;
+      // Force synchronous loading of peripheral JS.
+      script.async = false;
+    }
+    if (element.dataset.pjax !== undefined) {
+      script.dataset.pjax = '';
+    }
+    if (code !== '') {
+      script.appendChild(document.createTextNode(code));
+    }
+    parent.appendChild(script);
+  });
+  NexT.boot.refresh();
+  // Define Motion Sequence & Bootstrap Motion.
+  if (CONFIG.motion.enable) {
+    NexT.motion.integrator
+      .init()
+      .add(NexT.motion.middleWares.subMenu)
+      .add(NexT.motion.middleWares.postList)
+      .bootstrap();
+  }
+  NexT.utils.updateSidebarPosition();
+});
+</script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script data-pjax>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdnjs.cloudflare.com/ajax/libs/mermaid/8.4.8/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme    : 'forest',
+      logLevel : 3,
+      flowchart: { curve     : 'linear' },
+      gantt    : { axisFormat: '%m/%d/%Y' },
+      sequence : { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+    <div id="pjax">
+  
+
+  
+
+    </div>
+</body>
+</html>

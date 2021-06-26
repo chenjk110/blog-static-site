@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"blog.dymox.top","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":true,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="JavaScript中还没有私有变量标准，先来了解下私有变量是什么，以及都有哪些类型。 1. 私有变量的用途在编程中，私有变量通常作为类或者函数的内部变量，只有特定访问权限的方法才能够获得访问权，一个私有变量不管是类或者实例都无法从外部直接获取、修改，从而实现该变量私有化，保护变量的作用。 2. 私有变量的类别 实例私有变量 静态私有变量  3. 静态私有变量静态私有变量为类定义所具有的属性，所有">
+<meta property="og:type" content="article">
+<meta property="og:title" content="JavaScript私有变量的探究">
+<meta property="og:url" content="https://blog.dymox.top/2019/12/02/JavaScript%E7%A7%81%E6%9C%89%E5%8F%98%E9%87%8F%E7%9A%84%E6%8E%A2%E7%A9%B6/index.html">
+<meta property="og:site_name" content="TanKingKhun&#39;s Blog">
+<meta property="og:description" content="JavaScript中还没有私有变量标准，先来了解下私有变量是什么，以及都有哪些类型。 1. 私有变量的用途在编程中，私有变量通常作为类或者函数的内部变量，只有特定访问权限的方法才能够获得访问权，一个私有变量不管是类或者实例都无法从外部直接获取、修改，从而实现该变量私有化，保护变量的作用。 2. 私有变量的类别 实例私有变量 静态私有变量  3. 静态私有变量静态私有变量为类定义所具有的属性，所有">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://blog.dymox.top/2019/12/02/JavaScript%E7%A7%81%E6%9C%89%E5%8F%98%E9%87%8F%E7%9A%84%E6%8E%A2%E7%A9%B6/WX20191203-010702@2x.png">
+<meta property="og:image" content="https://blog.dymox.top/2019/12/02/JavaScript%E7%A7%81%E6%9C%89%E5%8F%98%E9%87%8F%E7%9A%84%E6%8E%A2%E7%A9%B6/WX20191202-135043@2x.png">
+<meta property="og:image" content="https://blog.dymox.top/2019/12/02/JavaScript%E7%A7%81%E6%9C%89%E5%8F%98%E9%87%8F%E7%9A%84%E6%8E%A2%E7%A9%B6/WX20191202-140648@2x.png">
+<meta property="og:image" content="https://blog.dymox.top/2019/12/02/JavaScript%E7%A7%81%E6%9C%89%E5%8F%98%E9%87%8F%E7%9A%84%E6%8E%A2%E7%A9%B6/WX20191202-140849@2x.png">
+<meta property="og:image" content="https://blog.dymox.top/2019/12/02/JavaScript%E7%A7%81%E6%9C%89%E5%8F%98%E9%87%8F%E7%9A%84%E6%8E%A2%E7%A9%B6/WX20191202-141054@2x.png">
+<meta property="article:published_time" content="2019-12-02T06:15:26.000Z">
+<meta property="article:modified_time" content="2021-06-26T11:40:14.444Z">
+<meta property="article:author" content="TanKingKhun">
+<meta property="article:tag" content="JavaScript">
+<meta property="article:tag" content="私有变量">
+<meta property="article:tag" content="闭包">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://blog.dymox.top/2019/12/02/JavaScript%E7%A7%81%E6%9C%89%E5%8F%98%E9%87%8F%E7%9A%84%E6%8E%A2%E7%A9%B6/WX20191203-010702@2x.png">
+
+<link rel="canonical" href="https://blog.dymox.top/2019/12/02/JavaScript%E7%A7%81%E6%9C%89%E5%8F%98%E9%87%8F%E7%9A%84%E6%8E%A2%E7%A9%B6/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>JavaScript私有变量的探究 | TanKingKhun's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">TanKingKhun's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.dymox.top/2019/12/02/JavaScript%E7%A7%81%E6%9C%89%E5%8F%98%E9%87%8F%E7%9A%84%E6%8E%A2%E7%A9%B6/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://avatars.githubusercontent.com/u/14145521?v=4">
+      <meta itemprop="name" content="TanKingKhun">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="TanKingKhun's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          JavaScript私有变量的探究
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-12-02 14:15:26" itemprop="dateCreated datePublished" datetime="2019-12-02T14:15:26+08:00">2019-12-02</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-06-26 19:40:14" itemprop="dateModified" datetime="2021-06-26T19:40:14+08:00">2021-06-26</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p><code>JavaScript</code>中还没有私有变量标准，先来了解下私有变量是什么，以及都有哪些类型。</p>
+<h1 id="1-私有变量的用途"><a href="#1-私有变量的用途" class="headerlink" title="1. 私有变量的用途"></a>1. 私有变量的用途</h1><p>在编程中，私有变量通常作为类或者函数的内部变量，只有特定访问权限的方法才能够获得访问权，一个私有变量不管是类或者实例都无法从外部直接获取、修改，从而实现该变量私有化，保护变量的作用。</p>
+<h1 id="2-私有变量的类别"><a href="#2-私有变量的类别" class="headerlink" title="2. 私有变量的类别"></a>2. 私有变量的类别</h1><ol>
+<li>实例私有变量</li>
+<li>静态私有变量</li>
+</ol>
+<h1 id="3-静态私有变量"><a href="#3-静态私有变量" class="headerlink" title="3. 静态私有变量"></a>3. 静态私有变量</h1><p>静态私有变量为类定义所具有的属性，所有该类的方法都具有访问权并且变量是共享一份，在此可以借助闭来进行实现：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> Person = (<span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="keyword">var</span> privateStaticVar = <span class="string">'Some private static value'</span></span><br><span class="line">  </span><br><span class="line">  <span class="function"><span class="keyword">function</span> <span class="title">Person</span> (<span class="params">value</span>) </span>&#123;</span><br><span class="line">    <span class="comment">// 构造函数中进行修改</span></span><br><span class="line">    value !== <span class="literal">undefined</span> &amp;&amp; (privateStaticVar = value)</span><br><span class="line">  &#125;</span><br><span class="line">  </span><br><span class="line">  Person.prototype.hello = <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="string">'Hello, this is '</span> + privateStaticVar <span class="comment">// 直接返回内容</span></span><br><span class="line">  &#125;</span><br><span class="line">  </span><br><span class="line">  <span class="comment">// 静态方法也可以访问</span></span><br><span class="line">  Person.getPrivateValue = <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> privateStaticVar</span><br><span class="line">  &#125;</span><br><span class="line">  </span><br><span class="line">  <span class="keyword">return</span> Person</span><br><span class="line">&#125;)()</span><br></pre></td></tr></table></figure>
+
+<p>我们实现了该变量的静态化以及私有化，静态化则是多个实例共享一份，私有化则无法在实例或者类上直接以属性方式获得访问，现在用代码验证下:</p>
+<p><img data-src="./WX20191203-010702@2x.png" alt=""></p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">Person.getPrivateValue() <span class="comment">// -&gt; 'Some private static value' 可访问的私有变量</span></span><br><span class="line">Person.privateStaticVar <span class="comment">// -&gt; undefined 无法直接访问的私有变量</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> p1 = <span class="keyword">new</span> Person()</span><br><span class="line">p1.hello() <span class="comment">// -&gt; 'Hello, this is Some private static value' 可访问的私有变量</span></span><br><span class="line">p1.privateStaticVar <span class="comment">// -&gt; undefined 无法直接访问的私有变量</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> p2 = <span class="keyword">new</span> Person(<span class="string">'Person 2'</span>)</span><br><span class="line">p2.privateStaticVar <span class="comment">// -&gt; undefined 无法直接访问的私有变量</span></span><br><span class="line">p2.hello() <span class="comment">// -&gt; 'Hello, this is Person 2' 修改了变量内容</span></span><br><span class="line"></span><br><span class="line">p1.hello() <span class="comment">// -&gt; 'Hello, this is Person 2' 可以发现私有变量是静态化的，实现了多实例共享</span></span><br></pre></td></tr></table></figure>
+
+<h1 id="4-实例私有变量"><a href="#4-实例私有变量" class="headerlink" title="4. 实例私有变量"></a>4. 实例私有变量</h1><p>与私有静态变量意义，这里使用闭包形式来实现私有变量，由于实例的私有变量是各自独立一份不共享，所以这里定义了一个对象作为存储每一份独立的私有变量信息，而我们为每一个实例定义一个<code>_vId</code>属性做为<code>key</code>来进行私有变量仓库的关联:</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> Person = (<span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="comment">// 定义每个实例</span></span><br><span class="line">  <span class="keyword">var</span> valueKey = <span class="string">'_vId'</span></span><br><span class="line">  <span class="comment">/* 初始化该类型的私有变量存储对象 */</span></span><br><span class="line">  <span class="keyword">var</span> privateVars = <span class="built_in">Object</span>.create(<span class="literal">null</span>)</span><br><span class="line">  </span><br><span class="line">  <span class="comment">/* 私有静态方法 */</span></span><br><span class="line">  <span class="keyword">var</span> getRandHex = <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="built_in">Math</span>.random().toString(<span class="number">16</span>).slice(<span class="number">3</span>, <span class="number">-1</span>)</span><br><span class="line">  &#125;</span><br><span class="line">  </span><br><span class="line">  <span class="function"><span class="keyword">function</span> <span class="title">Person</span> (<span class="params">lastName</span>) </span>&#123;</span><br><span class="line">    <span class="comment">/* 定义`_vId` */</span></span><br><span class="line">    <span class="built_in">Object</span>.defineProperty(<span class="keyword">this</span>, valueKey, &#123; <span class="attr">value</span>: getRandHex() &#125;)</span><br><span class="line">    </span><br><span class="line">    <span class="comment">/* 注册当前实例的私有化变量存储对象中 */</span></span><br><span class="line">    privateVars[<span class="keyword">this</span>[valueKey]] = <span class="built_in">Object</span>.create(&#123;</span><br><span class="line">      <span class="comment">/* 实例私有变量 */</span></span><br><span class="line">      firstName: <span class="string">'private name'</span>,</span><br><span class="line">      age: <span class="number">18</span>,</span><br><span class="line"></span><br><span class="line">      <span class="comment">/* 实例私有方法 */</span></span><br><span class="line">      getRandHex: getRandHex.bind(<span class="keyword">this</span>)</span><br><span class="line">    &#125;)</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 实例变量 */</span></span><br><span class="line">    <span class="keyword">this</span>.lastName = lastName</span><br><span class="line"></span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  Person.prototype = &#123;</span><br><span class="line">    <span class="comment">/* 公有方法 */</span></span><br><span class="line">    getName: <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">      <span class="comment">/* 私有变量 */</span></span><br><span class="line">      <span class="keyword">var</span> firstName = privateVars[<span class="keyword">this</span>[valueKey]].firstName</span><br><span class="line">      <span class="comment">/* 实例变量 */</span></span><br><span class="line">      <span class="keyword">var</span> lastName = <span class="keyword">this</span>.lastName</span><br><span class="line">      <span class="keyword">return</span> firstName + <span class="string">' '</span> + lastName</span><br><span class="line">    &#125;,</span><br><span class="line">    </span><br><span class="line">    getUID: <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">      <span class="comment">/* 私有方法 */</span></span><br><span class="line">      <span class="keyword">var</span> getRandHex = privateVars[<span class="keyword">this</span>[valueKey]].getRandHex</span><br><span class="line">      <span class="comment">/* 私有变量 */</span></span><br><span class="line">      <span class="keyword">var</span> firstName = privateVars[<span class="keyword">this</span>[valueKey]].firstName</span><br><span class="line">      <span class="keyword">return</span> firstName + <span class="string">':'</span> + getRandHex()</span><br><span class="line">    &#125;,</span><br><span class="line">    getInfo: <span class="function"><span class="keyword">function</span> (<span class="params"></span>) </span>&#123;</span><br><span class="line">      <span class="keyword">return</span>  &#123;</span><br><span class="line">        age: privateVars[<span class="keyword">this</span>[valueKey]].age,</span><br><span class="line">        firstName: privateVars[<span class="keyword">this</span>[valueKey]].firstName,</span><br><span class="line">        lastName: <span class="keyword">this</span>.lastName,</span><br><span class="line">        uid: <span class="keyword">this</span>.getUID()</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">return</span> Person</span><br><span class="line">&#125;)()</span><br><span class="line"><span class="keyword">var</span> p = <span class="keyword">new</span> Person(<span class="string">'Jack'</span>)</span><br><span class="line"><span class="built_in">console</span>.log(p)</span><br></pre></td></tr></table></figure>
+
+<p>从上面代码可以看出，我们定义了两个私有变量一个实例变量，三个公有方法，和一个私有方法，我们来测试下代码，看看能否按照我们的意愿执行：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> p = <span class="keyword">new</span> Person(<span class="string">'Jack'</span>)</span><br><span class="line"><span class="built_in">console</span>.log(p)</span><br></pre></td></tr></table></figure>
+
+<p><img data-src="./WX20191202-135043@2x.png" alt="PersonInstance"></p>
+<p>可以发现，符合预期，然后我们来继续测试下其他的私有变量和私有方法：</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">p.getInfo()</span><br></pre></td></tr></table></figure>
+<p><img data-src="./WX20191202-140648@2x.png" alt="PersonInstance"></p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">p.getUID()</span><br></pre></td></tr></table></figure>
+<p><img data-src="./WX20191202-140849@2x.png" alt="PersonInstance"></p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">p.getName()</span><br></pre></td></tr></table></figure>
+<p><img data-src="./WX20191202-141054@2x.png" alt="PersonInstance"></p>
+<p>可以看出变量与方法私有化使得使用更加安全，避免了外部的访问而导致的修改。</p>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <hr />
+  <h6>如果我的文章对你有帮助，可以请我喝杯咖啡哈~</h6>
+  <div id="qr" style="display: block;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/wechatpay.jpg" alt="TanKingKhun 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="/images/alipay.jpg" alt="TanKingKhun 支付宝">
+        <p>支付宝</p>
+      </div>
+  </div>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/JavaScript/" rel="tag"># JavaScript</a>
+              <a href="/tags/%E7%A7%81%E6%9C%89%E5%8F%98%E9%87%8F/" rel="tag"># 私有变量</a>
+              <a href="/tags/%E9%97%AD%E5%8C%85/" rel="tag"># 闭包</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2019/12/01/%E5%AE%9E%E7%8E%B0%E4%B8%80%E4%B8%AAPromise/" rel="prev" title="实现一个Promise">
+      <i class="fa fa-chevron-left"></i> 实现一个Promise
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2019/12/04/Axios%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB%E3%80%8C%E5%AE%9E%E7%8E%B0%E8%AF%B7%E6%B1%82%E7%9A%84%E5%8F%96%E6%B6%88%E4%B8%AD%E6%96%ADCancel%E3%80%8D/" rel="next" title="Axios源码解读「实现请求的取消中断Cancel」">
+      Axios源码解读「实现请求的取消中断Cancel」 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#1-私有变量的用途"><span class="nav-text">1. 私有变量的用途</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-私有变量的类别"><span class="nav-text">2. 私有变量的类别</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#3-静态私有变量"><span class="nav-text">3. 静态私有变量</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#4-实例私有变量"><span class="nav-text">4. 实例私有变量</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="TanKingKhun"
+      src="https://avatars.githubusercontent.com/u/14145521?v=4">
+  <p class="site-author-name" itemprop="name">TanKingKhun</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">30</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">32</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/chenjk110" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;chenjk110" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:chenjk110@qq.com" title="E-Mail → mailto:chenjk110@qq.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      Links
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="http://www.wangjianfeng.net/" title="http:&#x2F;&#x2F;www.wangjianfeng.net&#x2F;" rel="noopener" target="_blank">YouSeeSeeMe</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://www.fidding.me/" title="http:&#x2F;&#x2F;www.fidding.me&#x2F;" rel="noopener" target="_blank">Fidding</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://zhujp.net/" title="http:&#x2F;&#x2F;zhujp.net&#x2F;" rel="noopener" target="_blank">Venus</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://toad.dev/" title="https:&#x2F;&#x2F;toad.dev&#x2F;" rel="noopener" target="_blank">Toad.Woo</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">TanKingKhun</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/theme-next/theme-next-pjax@0/pjax.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/velocity/1.2.1/velocity.min.js"></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/velocity/1.2.1/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+  <script>
+var pjax = new Pjax({
+  selectors: [
+    'head title',
+    '#page-configurations',
+    '.content-wrap',
+    '.post-toc-wrap',
+    '.languages',
+    '#pjax'
+  ],
+  switches: {
+    '.post-toc-wrap': Pjax.switches.innerHTML
+  },
+  analytics: false,
+  cacheBust: false,
+  scrollTo : !CONFIG.bookmark.enable
+});
+
+window.addEventListener('pjax:success', () => {
+  document.querySelectorAll('script[data-pjax], script#page-configurations, #pjax script').forEach(element => {
+    var code = element.text || element.textContent || element.innerHTML || '';
+    var parent = element.parentNode;
+    parent.removeChild(element);
+    var script = document.createElement('script');
+    if (element.id) {
+      script.id = element.id;
+    }
+    if (element.className) {
+      script.className = element.className;
+    }
+    if (element.type) {
+      script.type = element.type;
+    }
+    if (element.src) {
+      script.src = element.src;
+      // Force synchronous loading of peripheral JS.
+      script.async = false;
+    }
+    if (element.dataset.pjax !== undefined) {
+      script.dataset.pjax = '';
+    }
+    if (code !== '') {
+      script.appendChild(document.createTextNode(code));
+    }
+    parent.appendChild(script);
+  });
+  NexT.boot.refresh();
+  // Define Motion Sequence & Bootstrap Motion.
+  if (CONFIG.motion.enable) {
+    NexT.motion.integrator
+      .init()
+      .add(NexT.motion.middleWares.subMenu)
+      .add(NexT.motion.middleWares.postList)
+      .bootstrap();
+  }
+  NexT.utils.updateSidebarPosition();
+});
+</script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script data-pjax>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdnjs.cloudflare.com/ajax/libs/mermaid/8.4.8/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme    : 'forest',
+      logLevel : 3,
+      flowchart: { curve     : 'linear' },
+      gantt    : { axisFormat: '%m/%d/%Y' },
+      sequence : { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+    <div id="pjax">
+  
+
+  
+
+    </div>
+</body>
+</html>

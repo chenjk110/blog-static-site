@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"blog.dymox.top","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":true,"mediumzoom":false,"lazyload":true,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="1234lib&#x2F;adapters  ├── README.md  # 说明文档  ├── http.js    # Node中请求方式 Http  └── xhr.js     # Browser中请求方式 XMLHttpRequest 根据使用环境的不同，Axios提供了不同的请求适配器，其中Nodejs中使用的是Http请求，而在浏览器中使用的是XMLHttpRequest，来了解下不同的适配">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Axios源码解读「适配器Adapter」">
+<meta property="og:url" content="https://blog.dymox.top/2019/12/04/Axios%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB%E3%80%8C%E9%80%82%E9%85%8D%E5%99%A8Adapter%E3%80%8D/index.html">
+<meta property="og:site_name" content="TanKingKhun&#39;s Blog">
+<meta property="og:description" content="1234lib&#x2F;adapters  ├── README.md  # 说明文档  ├── http.js    # Node中请求方式 Http  └── xhr.js     # Browser中请求方式 XMLHttpRequest 根据使用环境的不同，Axios提供了不同的请求适配器，其中Nodejs中使用的是Http请求，而在浏览器中使用的是XMLHttpRequest，来了解下不同的适配">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2019-12-04T16:50:43.000Z">
+<meta property="article:modified_time" content="2021-06-26T11:40:14.444Z">
+<meta property="article:author" content="TanKingKhun">
+<meta property="article:tag" content="JavaScript">
+<meta property="article:tag" content="Axios">
+<meta property="article:tag" content="源码阅读">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://blog.dymox.top/2019/12/04/Axios%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB%E3%80%8C%E9%80%82%E9%85%8D%E5%99%A8Adapter%E3%80%8D/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>Axios源码解读「适配器Adapter」 | TanKingKhun's Blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">TanKingKhun's Blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.dymox.top/2019/12/04/Axios%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB%E3%80%8C%E9%80%82%E9%85%8D%E5%99%A8Adapter%E3%80%8D/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://avatars.githubusercontent.com/u/14145521?v=4">
+      <meta itemprop="name" content="TanKingKhun">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="TanKingKhun's Blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Axios源码解读「适配器Adapter」
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-12-05 00:50:43" itemprop="dateCreated datePublished" datetime="2019-12-05T00:50:43+08:00">2019-12-05</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-06-26 19:40:14" itemprop="dateModified" datetime="2021-06-26T19:40:14+08:00">2021-06-26</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">lib/adapters</span><br><span class="line">  ├── README.md  <span class="comment"># 说明文档</span></span><br><span class="line">  ├── http.js    <span class="comment"># Node中请求方式 Http</span></span><br><span class="line">  └── xhr.js     <span class="comment"># Browser中请求方式 XMLHttpRequest</span></span><br></pre></td></tr></table></figure>
+<p>根据使用环境的不同，Axios提供了不同的请求适配器，其中Nodejs中使用的是Http请求，而在浏览器中使用的是XMLHttpRequest，来了解下不同的适配器有什么不同。</p>
+<h1 id="1-Nodejs中的请求适配器，http-js"><a href="#1-Nodejs中的请求适配器，http-js" class="headerlink" title="1. Nodejs中的请求适配器，http.js"></a>1. Nodejs中的请求适配器，http.js</h1><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br><span class="line">194</span><br><span class="line">195</span><br><span class="line">196</span><br><span class="line">197</span><br><span class="line">198</span><br><span class="line">199</span><br><span class="line">200</span><br><span class="line">201</span><br><span class="line">202</span><br><span class="line">203</span><br><span class="line">204</span><br><span class="line">205</span><br><span class="line">206</span><br><span class="line">207</span><br><span class="line">208</span><br><span class="line">209</span><br><span class="line">210</span><br><span class="line">211</span><br><span class="line">212</span><br><span class="line">213</span><br><span class="line">214</span><br><span class="line">215</span><br><span class="line">216</span><br><span class="line">217</span><br><span class="line">218</span><br><span class="line">219</span><br><span class="line">220</span><br><span class="line">221</span><br><span class="line">222</span><br><span class="line">223</span><br><span class="line">224</span><br><span class="line">225</span><br><span class="line">226</span><br><span class="line">227</span><br><span class="line">228</span><br><span class="line">229</span><br><span class="line">230</span><br><span class="line">231</span><br><span class="line">232</span><br><span class="line">233</span><br><span class="line">234</span><br><span class="line">235</span><br><span class="line">236</span><br><span class="line">237</span><br><span class="line">238</span><br><span class="line">239</span><br><span class="line">240</span><br><span class="line">241</span><br><span class="line">242</span><br><span class="line">243</span><br><span class="line">244</span><br><span class="line">245</span><br><span class="line">246</span><br><span class="line">247</span><br><span class="line">248</span><br><span class="line">249</span><br><span class="line">250</span><br><span class="line">251</span><br><span class="line">252</span><br><span class="line">253</span><br><span class="line">254</span><br><span class="line">255</span><br><span class="line">256</span><br><span class="line">257</span><br><span class="line">258</span><br><span class="line">259</span><br><span class="line">260</span><br><span class="line">261</span><br><span class="line">262</span><br><span class="line">263</span><br><span class="line">264</span><br><span class="line">265</span><br><span class="line">266</span><br><span class="line">267</span><br><span class="line">268</span><br><span class="line">269</span><br><span class="line">270</span><br><span class="line">271</span><br><span class="line">272</span><br><span class="line">273</span><br><span class="line">274</span><br><span class="line">275</span><br><span class="line">276</span><br><span class="line">277</span><br><span class="line">278</span><br><span class="line">279</span><br><span class="line">280</span><br><span class="line">281</span><br><span class="line">282</span><br><span class="line">283</span><br><span class="line">284</span><br><span class="line">285</span><br><span class="line">286</span><br><span class="line">287</span><br><span class="line">288</span><br><span class="line">289</span><br><span class="line">290</span><br><span class="line">291</span><br><span class="line">292</span><br><span class="line">293</span><br><span class="line">294</span><br><span class="line">295</span><br><span class="line">296</span><br><span class="line">297</span><br><span class="line">298</span><br><span class="line">299</span><br><span class="line">300</span><br><span class="line">301</span><br><span class="line">302</span><br><span class="line">303</span><br><span class="line">304</span><br><span class="line">305</span><br><span class="line">306</span><br><span class="line">307</span><br><span class="line">308</span><br><span class="line">309</span><br><span class="line">310</span><br><span class="line">311</span><br><span class="line">312</span><br><span class="line">313</span><br><span class="line">314</span><br><span class="line">315</span><br><span class="line">316</span><br><span class="line">317</span><br><span class="line">318</span><br><span class="line">319</span><br><span class="line">320</span><br><span class="line">321</span><br><span class="line">322</span><br><span class="line">323</span><br><span class="line">324</span><br><span class="line">325</span><br><span class="line">326</span><br><span class="line">327</span><br><span class="line">328</span><br><span class="line">329</span><br><span class="line">330</span><br><span class="line">331</span><br><span class="line">332</span><br><span class="line">333</span><br><span class="line">334</span><br><span class="line">335</span><br><span class="line">336</span><br><span class="line">337</span><br><span class="line">338</span><br><span class="line">339</span><br><span class="line">340</span><br><span class="line">341</span><br><span class="line">342</span><br><span class="line">343</span><br><span class="line">344</span><br><span class="line">345</span><br><span class="line">346</span><br><span class="line">347</span><br><span class="line">348</span><br><span class="line">349</span><br><span class="line">350</span><br><span class="line">351</span><br><span class="line">352</span><br><span class="line">353</span><br><span class="line">354</span><br><span class="line">355</span><br><span class="line">356</span><br><span class="line">357</span><br><span class="line">358</span><br><span class="line">359</span><br><span class="line">360</span><br><span class="line">361</span><br><span class="line">362</span><br><span class="line">363</span><br><span class="line">364</span><br><span class="line">365</span><br><span class="line">366</span><br><span class="line">367</span><br><span class="line">368</span><br><span class="line">369</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> utils = <span class="built_in">require</span>(<span class="string">'./../utils'</span>);</span><br><span class="line"><span class="keyword">var</span> settle = <span class="built_in">require</span>(<span class="string">'./../core/settle'</span>);</span><br><span class="line"><span class="keyword">var</span> buildFullPath = <span class="built_in">require</span>(<span class="string">'../core/buildFullPath'</span>);</span><br><span class="line"><span class="keyword">var</span> buildURL = <span class="built_in">require</span>(<span class="string">'./../helpers/buildURL'</span>);</span><br><span class="line"><span class="keyword">var</span> http = <span class="built_in">require</span>(<span class="string">'http'</span>);</span><br><span class="line"><span class="keyword">var</span> https = <span class="built_in">require</span>(<span class="string">'https'</span>);</span><br><span class="line"><span class="keyword">var</span> httpFollow = <span class="built_in">require</span>(<span class="string">'follow-redirects'</span>).http;</span><br><span class="line"><span class="keyword">var</span> httpsFollow = <span class="built_in">require</span>(<span class="string">'follow-redirects'</span>).https;</span><br><span class="line"><span class="keyword">var</span> url = <span class="built_in">require</span>(<span class="string">'url'</span>);</span><br><span class="line"><span class="keyword">var</span> zlib = <span class="built_in">require</span>(<span class="string">'zlib'</span>);</span><br><span class="line"><span class="keyword">var</span> pkg = <span class="built_in">require</span>(<span class="string">'./../../package.json'</span>);</span><br><span class="line"><span class="keyword">var</span> createError = <span class="built_in">require</span>(<span class="string">'../core/createError'</span>);</span><br><span class="line"><span class="keyword">var</span> enhanceError = <span class="built_in">require</span>(<span class="string">'../core/enhanceError'</span>);</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> isHttps = <span class="regexp">/https:?/</span>; <span class="comment">// 检测是否为https链接</span></span><br><span class="line"></span><br><span class="line"><span class="built_in">module</span>.exports = <span class="function"><span class="keyword">function</span> <span class="title">httpAdapter</span>(<span class="params">config</span>) </span>&#123;</span><br><span class="line">  <span class="comment">// 传入配置config，并返回一个promise</span></span><br><span class="line">  <span class="keyword">return</span> <span class="keyword">new</span> <span class="built_in">Promise</span>(<span class="function"><span class="keyword">function</span> <span class="title">dispatchHttpRequest</span>(<span class="params">resolvePromise, rejectPromise</span>) </span>&#123;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 保留resolve引用</span></span><br><span class="line">    <span class="keyword">var</span> resolve = <span class="function"><span class="keyword">function</span> <span class="title">resolve</span>(<span class="params">value</span>) </span>&#123;</span><br><span class="line">      resolvePromise(value);</span><br><span class="line">    &#125;;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 保留resolve引用</span></span><br><span class="line">    <span class="keyword">var</span> reject = <span class="function"><span class="keyword">function</span> <span class="title">reject</span>(<span class="params">value</span>) </span>&#123;</span><br><span class="line">      rejectPromise(value);</span><br><span class="line">    &#125;;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 获得配置中的数据data和头部信息headers</span></span><br><span class="line">    <span class="keyword">var</span> data = config.data;</span><br><span class="line">    <span class="keyword">var</span> headers = config.headers;</span><br><span class="line"></span><br><span class="line">    </span><br><span class="line">    <span class="comment">/* 1. 检查用户代理头部信息 */</span></span><br><span class="line">    <span class="keyword">if</span> (!headers[<span class="string">'User-Agent'</span>] &amp;&amp; !headers[<span class="string">'user-agent'</span>]) &#123;</span><br><span class="line">      headers[<span class="string">'User-Agent'</span>] = <span class="string">'axios/'</span> + pkg.version;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    </span><br><span class="line">    <span class="comment">/* 2. data数据字段的初步处理 */</span></span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 检查data是否存在，且若非Stream类型则需要做进一步转换成Buffer类型</span></span><br><span class="line">    <span class="keyword">if</span> (data &amp;&amp; !utils.isStream(data)) &#123;</span><br><span class="line">      <span class="keyword">if</span> (Buffer.isBuffer(data)) &#123;</span><br><span class="line">        <span class="comment">// Nothing to do...</span></span><br><span class="line">      &#125; <span class="keyword">else</span> <span class="keyword">if</span> (utils.isArrayBuffer(data)) &#123;</span><br><span class="line">        data = Buffer.from(<span class="keyword">new</span> <span class="built_in">Uint8Array</span>(data));</span><br><span class="line">      &#125; <span class="keyword">else</span> <span class="keyword">if</span> (utils.isString(data)) &#123;</span><br><span class="line">        data = Buffer.from(data, <span class="string">'utf-8'</span>);</span><br><span class="line">      &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> reject(createError(</span><br><span class="line">          <span class="string">'Data after transformation must be a string, an ArrayBuffer, a Buffer, or a Stream'</span>,</span><br><span class="line">          config</span><br><span class="line">        ));</span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">      <span class="comment">// 如果data存在，则设置Content-Length头部字段</span></span><br><span class="line">      headers[<span class="string">'Content-Length'</span>] = data.length;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/*  3. HTTP认证信息初步处理 */</span></span><br><span class="line">    </span><br><span class="line">    <span class="keyword">var</span> auth = <span class="literal">undefined</span>;</span><br><span class="line">    <span class="comment">// 如果config中有配置auth信息，则进一步处理</span></span><br><span class="line">    <span class="keyword">if</span> (config.auth) &#123;</span><br><span class="line">      <span class="comment">// 重新获取username和password并初始化</span></span><br><span class="line">      <span class="keyword">var</span> username = config.auth.username || <span class="string">''</span>;</span><br><span class="line">      <span class="keyword">var</span> password = config.auth.password || <span class="string">''</span>;</span><br><span class="line"></span><br><span class="line">      <span class="comment">// 重新将auth信息组合成字符串形式</span></span><br><span class="line">      auth = username + <span class="string">':'</span> + password; </span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    </span><br><span class="line">    <span class="comment">/* 4. 解析需要发起请求的URL */</span></span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 根据config中的baseURL和url配置生成完整的url链接</span></span><br><span class="line">    <span class="keyword">var</span> fullPath = buildFullPath(config.baseURL, config.url);</span><br><span class="line">    <span class="comment">// 用url库解析链接地址</span></span><br><span class="line">    <span class="keyword">var</span> parsed = url.parse(fullPath);</span><br><span class="line">    <span class="comment">// 获得链接的协议类型，默认设为http:</span></span><br><span class="line">    <span class="keyword">var</span> protocol = parsed.protocol || <span class="string">'http:'</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// config中非存在auth配置信息，且在url中包含auth信息，则重新处理url中的auth信息</span></span><br><span class="line">    <span class="keyword">if</span> (!auth &amp;&amp; parsed.auth) &#123;</span><br><span class="line">      <span class="keyword">var</span> urlAuth = parsed.auth.split(<span class="string">':'</span>);</span><br><span class="line">      <span class="keyword">var</span> urlUsername = urlAuth[<span class="number">0</span>] || <span class="string">''</span>;</span><br><span class="line">      <span class="keyword">var</span> urlPassword = urlAuth[<span class="number">1</span>] || <span class="string">''</span>;</span><br><span class="line">      auth = urlUsername + <span class="string">':'</span> + urlPassword;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// config或者url中包含了auth信息，则删除头部的Authorization字段</span></span><br><span class="line">    <span class="comment">// 因为auth会作为request请求配置中的auth字段值传入</span></span><br><span class="line">    <span class="keyword">if</span> (auth) &#123;</span><br><span class="line">      <span class="keyword">delete</span> headers.Authorization;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 是否为https请求</span></span><br><span class="line">    <span class="keyword">var</span> isHttpsRequest = isHttps.test(protocol);</span><br><span class="line">    <span class="comment">// 根据请求类型去查询config中的agent配置信息</span></span><br><span class="line">    <span class="comment">// config中有`httpsAgent`和`httpAgent`配置信息，对应其请求类型</span></span><br><span class="line">    <span class="keyword">var</span> agent = isHttpsRequest ? config.httpsAgent : config.httpAgent;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 5. 定义http库中的request请求配置 */</span></span><br><span class="line">    </span><br><span class="line">    <span class="keyword">var</span> options = &#123;</span><br><span class="line">      <span class="comment">// 这边只有path, 例如：/users/1?name='123'</span></span><br><span class="line">      path: buildURL(parsed.path, config.params, config.paramsSerializer).replace(<span class="regexp">/^\?/</span>, <span class="string">''</span>),</span><br><span class="line">      method: config.method.toUpperCase(), <span class="comment">// -&gt; 例如： 'GET'</span></span><br><span class="line">      headers: headers,</span><br><span class="line">      agent: agent,</span><br><span class="line">      agents: &#123;</span><br><span class="line">        httpsAgent: config.httpsAgent,</span><br><span class="line">        httpAgent: config.httpAgent</span><br><span class="line">      &#125;,</span><br><span class="line">      auth: auth <span class="comment">// 'username:password'形式</span></span><br><span class="line">    &#125;;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 注入额外的配置信息，</span></span><br><span class="line">    <span class="keyword">if</span> (config.socketPath) &#123;</span><br><span class="line">      options.socketPath = config.socketPath;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      <span class="comment">// 注入从解析url得到的hostname、port信息</span></span><br><span class="line">      options.hostname = parsed.hostname;</span><br><span class="line">      options.port = parsed.port;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    </span><br><span class="line">    <span class="comment">/* 6. 代理配置信息处理 */</span></span><br><span class="line">    </span><br><span class="line">    <span class="keyword">var</span> proxy = config.proxy;</span><br><span class="line">    <span class="comment">// config中未配置proxy信息，则从环境变量中去检测是否需要走代理</span></span><br><span class="line">    <span class="keyword">if</span> (!proxy &amp;&amp; proxy !== <span class="literal">false</span>) &#123;</span><br><span class="line">      <span class="comment">// 构建proxy的环境变量字段： 'http_proxy' 或 'https_proxy'</span></span><br><span class="line">      <span class="keyword">var</span> proxyEnv = protocol.slice(<span class="number">0</span>, <span class="number">-1</span>) + <span class="string">'_proxy'</span>; </span><br><span class="line">      <span class="comment">// 获取环境变量中的proxy信息， 如果环境中未配置，则为undefined</span></span><br><span class="line">      <span class="keyword">var</span> proxyUrl = process.env[proxyEnv] || process.env[proxyEnv.toUpperCase()];</span><br><span class="line">      </span><br><span class="line">      <span class="comment">// 全局变量中存在代理信息，进一步确认代理流程</span></span><br><span class="line">      <span class="keyword">if</span> (proxyUrl) &#123;</span><br><span class="line">        <span class="keyword">var</span> parsedProxyUrl = url.parse(proxyUrl);</span><br><span class="line">        <span class="keyword">var</span> noProxyEnv = process.env.no_proxy || process.env.NO_PROXY;</span><br><span class="line">        <span class="keyword">var</span> shouldProxy = <span class="literal">true</span>;</span><br><span class="line">        </span><br><span class="line">        <span class="keyword">if</span> (noProxyEnv) &#123;</span><br><span class="line">          </span><br><span class="line">          <span class="keyword">var</span> noProxy = noProxyEnv.split(<span class="string">','</span>).map(<span class="function"><span class="keyword">function</span> <span class="title">trim</span>(<span class="params">s</span>) </span>&#123;</span><br><span class="line">            <span class="keyword">return</span> s.trim();</span><br><span class="line">          &#125;);</span><br><span class="line">          </span><br><span class="line">          <span class="comment">// 只要存在有效代理信息，则配置代理 </span></span><br><span class="line">          shouldProxy = !noProxy.some(<span class="function"><span class="keyword">function</span> <span class="title">proxyMatch</span>(<span class="params">proxyElement</span>) </span>&#123;</span><br><span class="line">            <span class="comment">// 不存在具体的代理地址</span></span><br><span class="line">            <span class="keyword">if</span> (!proxyElement) &#123;</span><br><span class="line">              <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            </span><br><span class="line">            <span class="comment">// 存在`*`通配符</span></span><br><span class="line">            <span class="keyword">if</span> (proxyElement === <span class="string">'*'</span>) &#123;</span><br><span class="line">              <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            </span><br><span class="line">            <span class="comment">// 子域名</span></span><br><span class="line">            <span class="keyword">if</span> (proxyElement[<span class="number">0</span>] === <span class="string">'.'</span> &amp;&amp;</span><br><span class="line">                parsed.hostname.substr(</span><br><span class="line">                  parsed.hostname.length - proxyElement.length</span><br><span class="line">                ) === proxyElement) &#123;</span><br><span class="line">              <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            </span><br><span class="line">            <span class="comment">// 检查请求的hostname和全局变量中代理的hostname是否相等</span></span><br><span class="line">            <span class="keyword">return</span> parsed.hostname === proxyElement; </span><br><span class="line">          &#125;);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 可代理，则在proxy中重新写入环境变量中的代理信息</span></span><br><span class="line">        <span class="keyword">if</span> (shouldProxy) &#123;</span><br><span class="line">          proxy = &#123;</span><br><span class="line">            host: parsedProxyUrl.hostname,</span><br><span class="line">            port: parsedProxyUrl.port</span><br><span class="line">          &#125;;</span><br><span class="line">          </span><br><span class="line">          <span class="comment">// 重新写入全局变量中的代理auth信息到proxy</span></span><br><span class="line">          <span class="keyword">if</span> (parsedProxyUrl.auth) &#123;</span><br><span class="line">            <span class="keyword">var</span> proxyUrlAuth = parsedProxyUrl.auth.split(<span class="string">':'</span>);</span><br><span class="line">            proxy.auth = &#123;</span><br><span class="line">              username: proxyUrlAuth[<span class="number">0</span>],</span><br><span class="line">              password: proxyUrlAuth[<span class="number">1</span>]</span><br><span class="line">            &#125;;</span><br><span class="line">          &#125;</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    </span><br><span class="line">    <span class="comment">// config有proxy配置信息</span></span><br><span class="line">    <span class="keyword">if</span> (proxy) &#123;</span><br><span class="line">      <span class="comment">// 将设置的代理信息更新到option配置项中</span></span><br><span class="line">      options.hostname = proxy.host;</span><br><span class="line">      options.host = proxy.host;</span><br><span class="line">      options.headers.host = parsed.hostname + (parsed.port ? <span class="string">':'</span> + parsed.port : <span class="string">''</span>);</span><br><span class="line">      options.port = proxy.port;</span><br><span class="line">      options.path = protocol </span><br><span class="line">        + <span class="string">'//'</span> </span><br><span class="line">        + parsed.hostname </span><br><span class="line">        + (parsed.port ? <span class="string">':'</span> + parsed.port : <span class="string">''</span>) </span><br><span class="line">        + options.path;</span><br><span class="line"></span><br><span class="line">      <span class="comment">// Basic proxy authorization</span></span><br><span class="line">      <span class="comment">// 配置代理认证信息</span></span><br><span class="line">      <span class="keyword">if</span> (proxy.auth) &#123;</span><br><span class="line">        <span class="keyword">var</span> base64 = Buffer.from(</span><br><span class="line">          proxy.auth.username + <span class="string">':'</span> + proxy.auth.password,</span><br><span class="line">          <span class="string">'utf8'</span></span><br><span class="line">        ).toString(<span class="string">'base64'</span>); <span class="comment">// 将'username:password' -&gt; Base64字符串</span></span><br><span class="line">        </span><br><span class="line">        <span class="comment">// 在头部中设置代理认证信息</span></span><br><span class="line">        options.headers[<span class="string">'Proxy-Authorization'</span>] = <span class="string">'Basic '</span> + base64;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">var</span> transport; <span class="comment">// 定义请求转发器</span></span><br><span class="line">    <span class="keyword">var</span> isHttpsProxy = isHttpsRequest &amp;&amp; (proxy ? isHttps.test(proxy.protocol) : <span class="literal">true</span>);</span><br><span class="line">    </span><br><span class="line">    <span class="comment">/* 7. 指定请求器 */</span></span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 使用自定义请求转发器</span></span><br><span class="line">    <span class="keyword">if</span> (config.transport) &#123;</span><br><span class="line">      transport = config.transport;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 不设定转发重定向，则默认为http 或 https请求器</span></span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (config.maxRedirects === <span class="number">0</span>) &#123;</span><br><span class="line">      transport = isHttpsProxy ? https : http;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      <span class="comment">// 将最大重定向数值配置到options</span></span><br><span class="line">      <span class="keyword">if</span> (config.maxRedirects) &#123;</span><br><span class="line">        options.maxRedirects = config.maxRedirects;</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="comment">// 使用专用转发库 httpsFollow 或 httpFollow</span></span><br><span class="line">      transport = isHttpsProxy ? httpsFollow : httpFollow;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 数据长度限制</span></span><br><span class="line">    <span class="keyword">if</span> (config.maxContentLength &amp;&amp; config.maxContentLength &gt; <span class="number">-1</span>) &#123;</span><br><span class="line">      options.maxBodyLength = config.maxContentLength;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* 8. 创建一个请求`req` */</span></span><br><span class="line">    </span><br><span class="line">    <span class="keyword">var</span> req = transport.request(options, <span class="function"><span class="keyword">function</span> <span class="title">handleResponse</span>(<span class="params">res</span>) </span>&#123;</span><br><span class="line">      <span class="keyword">if</span> (req.aborted) <span class="keyword">return</span>;</span><br><span class="line"></span><br><span class="line">      <span class="comment">// body数据解压</span></span><br><span class="line">      <span class="keyword">var</span> stream = res;</span><br><span class="line">      <span class="comment">// 在结果的头部中存在以下content-encoding头部信息，则需要做解压</span></span><br><span class="line">      <span class="keyword">switch</span> (res.headers[<span class="string">'content-encoding'</span>]) &#123;</span><br><span class="line">      <span class="keyword">case</span> <span class="string">'gzip'</span>:</span><br><span class="line">      <span class="keyword">case</span> <span class="string">'compress'</span>:</span><br><span class="line">      <span class="keyword">case</span> <span class="string">'deflate'</span>:</span><br><span class="line">        <span class="comment">// Http状态码为204 No Content，body无数据则不需要做解压</span></span><br><span class="line">        stream = (res.statusCode === <span class="number">204</span>) </span><br><span class="line">          ? stream </span><br><span class="line">          : stream.pipe(zlib.createUnzip());</span><br><span class="line">        </span><br><span class="line">        <span class="comment">// 去除结果头部的解析信息</span></span><br><span class="line">        <span class="keyword">delete</span> res.headers[<span class="string">'content-encoding'</span>];</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">      <span class="comment">// return the last request in case of redirects</span></span><br><span class="line">      <span class="keyword">var</span> lastRequest = res.req || req;</span><br><span class="line">      </span><br><span class="line">      <span class="comment">// 构建结果数据结构</span></span><br><span class="line">      <span class="keyword">var</span> response = &#123;</span><br><span class="line">        status: res.statusCode,</span><br><span class="line">        statusText: res.statusMessage,</span><br><span class="line">        headers: res.headers,</span><br><span class="line">        config: config,</span><br><span class="line">        request: lastRequest</span><br><span class="line">      &#125;;</span><br><span class="line">      </span><br><span class="line">      <span class="keyword">if</span> (config.responseType === <span class="string">'stream'</span>) &#123;</span><br><span class="line">        response.data = stream;</span><br><span class="line">        settle(resolve, reject, response);</span><br><span class="line">        </span><br><span class="line">      <span class="comment">// 以非Stream形式返回data</span></span><br><span class="line">      &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="keyword">var</span> responseBuffer = [];</span><br><span class="line">        </span><br><span class="line">        <span class="comment">// 流数据分片事件</span></span><br><span class="line">        stream.on(<span class="string">'data'</span>, <span class="function"><span class="keyword">function</span> <span class="title">handleStreamData</span>(<span class="params">chunk</span>) </span>&#123;</span><br><span class="line">          responseBuffer.push(chunk);</span><br><span class="line"></span><br><span class="line">          <span class="comment">// data的长度不得超过设置的maxContentLength</span></span><br><span class="line">          <span class="keyword">if</span> (config.maxContentLength &gt; <span class="number">-1</span> </span><br><span class="line">              &amp;&amp; Buffer.concat(responseBuffer).length &gt; config.maxContentLength) &#123;</span><br><span class="line">            stream.destroy();</span><br><span class="line">            reject(createError(</span><br><span class="line">              <span class="string">'maxContentLength size of '</span> + config.maxContentLength + <span class="string">' exceeded'</span>,</span><br><span class="line">              config, <span class="literal">null</span>, lastRequest</span><br><span class="line">            ));</span><br><span class="line">          &#125;</span><br><span class="line">        &#125;);</span><br><span class="line">        </span><br><span class="line">        stream.on(<span class="string">'error'</span>, <span class="function"><span class="keyword">function</span> <span class="title">handleStreamError</span>(<span class="params">err</span>) </span>&#123;</span><br><span class="line">          <span class="keyword">if</span> (req.aborted) <span class="keyword">return</span>;</span><br><span class="line">          reject(enhanceError(err, config, <span class="literal">null</span>, lastRequest));</span><br><span class="line">        &#125;);</span><br><span class="line">        </span><br><span class="line">        <span class="comment">// 完成流数据分片获取完成</span></span><br><span class="line">        stream.on(<span class="string">'end'</span>, <span class="function"><span class="keyword">function</span> <span class="title">handleStreamEnd</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">          <span class="keyword">var</span> responseData = Buffer.concat(responseBuffer);</span><br><span class="line">          </span><br><span class="line">          <span class="comment">// 结果非ArrayBuffer</span></span><br><span class="line">          <span class="keyword">if</span> (config.responseType !== <span class="string">'arraybuffer'</span>) &#123;</span><br><span class="line">            <span class="comment">// 直接转化成字符串</span></span><br><span class="line">            responseData = responseData.toString(config.responseEncoding);</span><br><span class="line">          &#125;</span><br><span class="line"></span><br><span class="line">          response.data = responseData;</span><br><span class="line">          </span><br><span class="line">          <span class="comment">// 完成数据接收，并更改promise状态，返回response</span></span><br><span class="line">          settle(resolve, reject, response);</span><br><span class="line">        &#125;);</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 请求的错误处理</span></span><br><span class="line">    req.on(<span class="string">'error'</span>, <span class="function"><span class="keyword">function</span> <span class="title">handleRequestError</span>(<span class="params">err</span>) </span>&#123;</span><br><span class="line">      <span class="keyword">if</span> (req.aborted) <span class="keyword">return</span>;</span><br><span class="line">      reject(enhanceError(err, config, <span class="literal">null</span>, req));</span><br><span class="line">    &#125;);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 超时处理</span></span><br><span class="line">    <span class="keyword">if</span> (config.timeout) &#123;</span><br><span class="line">      req.setTimeout(config.timeout, <span class="function"><span class="keyword">function</span> <span class="title">handleRequestTimeout</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">        req.abort(); <span class="comment">// 终止请求</span></span><br><span class="line">        reject(createError(</span><br><span class="line">          <span class="string">'timeout of '</span> + config.timeout + <span class="string">'ms exceeded'</span>,</span><br><span class="line">          config, <span class="string">'ECONNABORTED'</span>, req</span><br><span class="line">        ));</span><br><span class="line">      &#125;);</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 请求配置了终止信息</span></span><br><span class="line">    <span class="keyword">if</span> (config.cancelToken) &#123;</span><br><span class="line">      </span><br><span class="line">      <span class="comment">// 直接将中断</span></span><br><span class="line">      config.cancelToken.promise.then(<span class="function"><span class="keyword">function</span> <span class="title">onCanceled</span>(<span class="params">cancel</span>) </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (req.aborted) <span class="keyword">return</span>;</span><br><span class="line"></span><br><span class="line">        req.abort();</span><br><span class="line">        reject(cancel);</span><br><span class="line">      &#125;);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 发送请求</span></span><br><span class="line">    <span class="keyword">if</span> (utils.isStream(data)) &#123;</span><br><span class="line">      data.on(<span class="string">'error'</span>, <span class="function"><span class="keyword">function</span> <span class="title">handleStreamError</span>(<span class="params">err</span>) </span>&#123;</span><br><span class="line">        reject(enhanceError(err, config, <span class="literal">null</span>, req));</span><br><span class="line">      &#125;).pipe(req);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      req.end(data);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;);</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+
+
+<h1 id="2-浏览器中的适配器，xhr-js"><a href="#2-浏览器中的适配器，xhr-js" class="headerlink" title="2. 浏览器中的适配器，xhr.js"></a>2. 浏览器中的适配器，xhr.js</h1><figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br><span class="line">164</span><br><span class="line">165</span><br><span class="line">166</span><br><span class="line">167</span><br><span class="line">168</span><br><span class="line">169</span><br><span class="line">170</span><br><span class="line">171</span><br><span class="line">172</span><br><span class="line">173</span><br><span class="line">174</span><br><span class="line">175</span><br><span class="line">176</span><br><span class="line">177</span><br><span class="line">178</span><br><span class="line">179</span><br><span class="line">180</span><br><span class="line">181</span><br><span class="line">182</span><br><span class="line">183</span><br><span class="line">184</span><br><span class="line">185</span><br><span class="line">186</span><br><span class="line">187</span><br><span class="line">188</span><br><span class="line">189</span><br><span class="line">190</span><br><span class="line">191</span><br><span class="line">192</span><br><span class="line">193</span><br><span class="line">194</span><br><span class="line">195</span><br><span class="line">196</span><br><span class="line">197</span><br><span class="line">198</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> utils = <span class="built_in">require</span>(<span class="string">'./../utils'</span>);</span><br><span class="line"><span class="keyword">var</span> settle = <span class="built_in">require</span>(<span class="string">'./../core/settle'</span>);</span><br><span class="line"><span class="keyword">var</span> buildURL = <span class="built_in">require</span>(<span class="string">'./../helpers/buildURL'</span>);</span><br><span class="line"><span class="keyword">var</span> buildFullPath = <span class="built_in">require</span>(<span class="string">'../core/buildFullPath'</span>);</span><br><span class="line"><span class="keyword">var</span> parseHeaders = <span class="built_in">require</span>(<span class="string">'./../helpers/parseHeaders'</span>);</span><br><span class="line"><span class="keyword">var</span> isURLSameOrigin = <span class="built_in">require</span>(<span class="string">'./../helpers/isURLSameOrigin'</span>);</span><br><span class="line"><span class="keyword">var</span> createError = <span class="built_in">require</span>(<span class="string">'../core/createError'</span>);</span><br><span class="line"></span><br><span class="line"><span class="built_in">module</span>.exports = <span class="function"><span class="keyword">function</span> <span class="title">xhrAdapter</span>(<span class="params">config</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">return</span> <span class="keyword">new</span> <span class="built_in">Promise</span>(<span class="function"><span class="keyword">function</span> <span class="title">dispatchXhrRequest</span>(<span class="params">resolve, reject</span>) </span>&#123;</span><br><span class="line">    <span class="keyword">var</span> requestData = config.data;</span><br><span class="line">    <span class="keyword">var</span> requestHeaders = config.headers;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (utils.isFormData(requestData)) &#123;</span><br><span class="line">      <span class="comment">// 让浏览器自动设置FormData的'Content-Type'头部字段</span></span><br><span class="line">      <span class="keyword">delete</span> requestHeaders[<span class="string">'Content-Type'</span>];</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 利用XMLHttpRequest创建request</span></span><br><span class="line">    <span class="keyword">var</span> request = <span class="keyword">new</span> XMLHttpRequest();</span><br><span class="line"></span><br><span class="line">    <span class="comment">// HTTP basic authentication</span></span><br><span class="line">    <span class="keyword">if</span> (config.auth) &#123;</span><br><span class="line">      <span class="keyword">var</span> username = config.auth.username || <span class="string">''</span>;</span><br><span class="line">      <span class="keyword">var</span> password = config.auth.password || <span class="string">''</span>;</span><br><span class="line">      requestHeaders.Authorization = <span class="string">'Basic '</span> + btoa(username + <span class="string">':'</span> + password);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">var</span> fullPath = buildFullPath(config.baseURL, config.url);</span><br><span class="line">    <span class="comment">// open(METHOD, URL, ASYNC)</span></span><br><span class="line">    request.open(</span><br><span class="line">      config.method.toUpperCase(), <span class="comment">// -&gt; method</span></span><br><span class="line">      buildURL(fullPath, config.params, config.paramsSerializer), <span class="comment">// -&gt; url</span></span><br><span class="line">      <span class="literal">true</span> <span class="comment">// -&gt; 异步</span></span><br><span class="line">    );</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Set the request timeout in MS</span></span><br><span class="line">    request.timeout = config.timeout;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Listen for ready state</span></span><br><span class="line">    request.onreadystatechange = <span class="function"><span class="keyword">function</span> <span class="title">handleLoad</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">      <span class="keyword">if</span> (!request || request.readyState !== <span class="number">4</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">      <span class="comment">// 修改'file:'协议的请求直接返回不处理</span></span><br><span class="line">      <span class="keyword">if</span> (request.status === <span class="number">0</span> </span><br><span class="line">          &amp;&amp; !(request.responseURL &amp;&amp; request.responseURL.indexOf(<span class="string">'file:'</span>) === <span class="number">0</span>)) &#123;</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">      <span class="comment">// 处理返回结果的头部信息，如果能利用getAllResponseHeaders获取到</span></span><br><span class="line">      <span class="comment">// 则直接解析结果头部信息文本</span></span><br><span class="line">      <span class="keyword">var</span> responseHeaders = <span class="string">'getAllResponseHeaders'</span> <span class="keyword">in</span> request </span><br><span class="line">        ? parseHeaders(request.getAllResponseHeaders()) </span><br><span class="line">        : <span class="literal">null</span>;</span><br><span class="line">      </span><br><span class="line">      <span class="comment">// 未设置结果的数据类型，或者指定为'text'，则返回responseText</span></span><br><span class="line">      <span class="comment">// 否则返回对应类型的response</span></span><br><span class="line">      <span class="keyword">var</span> responseData = !config.responseType || config.responseType === <span class="string">'text'</span> </span><br><span class="line">        ? request.responseText</span><br><span class="line">        : request.response;</span><br><span class="line">      </span><br><span class="line">      <span class="comment">// 构造最终的结果数据结构</span></span><br><span class="line">      <span class="keyword">var</span> response = &#123;</span><br><span class="line">        data: responseData,</span><br><span class="line">        status: request.status,</span><br><span class="line">        statusText: request.statusText,</span><br><span class="line">        headers: responseHeaders,</span><br><span class="line">        config: config,</span><br><span class="line">        request: request</span><br><span class="line">      &#125;;</span><br><span class="line">      </span><br><span class="line">      <span class="comment">// 改变promise为resolved</span></span><br><span class="line">      settle(resolve, reject, response);</span><br><span class="line"></span><br><span class="line">      <span class="comment">// 完成请求则直接去除引用，为方便后面终止请求方法的判断</span></span><br><span class="line">      request = <span class="literal">null</span>;</span><br><span class="line">    &#125;;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 处理请求终止</span></span><br><span class="line">    request.onabort = <span class="function"><span class="keyword">function</span> <span class="title">handleAbort</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">      <span class="keyword">if</span> (!request) &#123;</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">      reject(createError(<span class="string">'Request aborted'</span>, config, <span class="string">'ECONNABORTED'</span>, request));</span><br><span class="line"></span><br><span class="line">      <span class="comment">// 完成请求终止，去除引用</span></span><br><span class="line">      request = <span class="literal">null</span>;</span><br><span class="line">    &#125;;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 处理底层网络错误，非HTTP状态码错误，例如网络不通等情况</span></span><br><span class="line">    request.onerror = <span class="function"><span class="keyword">function</span> <span class="title">handleError</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">      <span class="comment">// Real errors are hidden from us by the browser</span></span><br><span class="line">      <span class="comment">// onerror should only fire if it's a network error</span></span><br><span class="line">      reject(createError(<span class="string">'Network Error'</span>, config, <span class="literal">null</span>, request));</span><br><span class="line"></span><br><span class="line">      <span class="comment">// 请求出错，去除引用</span></span><br><span class="line">      request = <span class="literal">null</span>;</span><br><span class="line">    &#125;;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 处理超时</span></span><br><span class="line">    request.ontimeout = <span class="function"><span class="keyword">function</span> <span class="title">handleTimeout</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">      <span class="keyword">var</span> timeoutErrorMessage = <span class="string">'timeout of '</span> + config.timeout + <span class="string">'ms exceeded'</span>;</span><br><span class="line">      <span class="keyword">if</span> (config.timeoutErrorMessage) &#123;</span><br><span class="line">        timeoutErrorMessage = config.timeoutErrorMessage;</span><br><span class="line">      &#125;</span><br><span class="line">      reject(createError(timeoutErrorMessage, config, <span class="string">'ECONNABORTED'</span>,</span><br><span class="line">        request));</span><br><span class="line"></span><br><span class="line">      <span class="comment">// 请求超时，去除引用</span></span><br><span class="line">      request = <span class="literal">null</span>;</span><br><span class="line">    &#125;;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Add xsrf header</span></span><br><span class="line">    <span class="comment">// This is only done if running in a standard browser environment.</span></span><br><span class="line">    <span class="comment">// Specifically not if we're in a web worker, or react-native.</span></span><br><span class="line">    <span class="keyword">if</span> (utils.isStandardBrowserEnv()) &#123;</span><br><span class="line">      <span class="keyword">var</span> cookies = <span class="built_in">require</span>(<span class="string">'./../helpers/cookies'</span>);</span><br><span class="line"></span><br><span class="line">      <span class="comment">// Add xsrf header</span></span><br><span class="line">      <span class="keyword">var</span> xsrfValue = (config.withCredentials || isURLSameOrigin(fullPath)) </span><br><span class="line">        &amp;&amp; config.xsrfCookieName </span><br><span class="line">          ? cookies.read(config.xsrfCookieName)</span><br><span class="line">          : <span class="literal">undefined</span>;</span><br><span class="line"></span><br><span class="line">      <span class="keyword">if</span> (xsrfValue) &#123;</span><br><span class="line">        <span class="comment">// 如果是跨站请求，需要在头部带上需要的头部信息数据</span></span><br><span class="line">        requestHeaders[config.xsrfHeaderName] = xsrfValue;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 将config中的头部信息添加到请求中</span></span><br><span class="line">    <span class="keyword">if</span> (<span class="string">'setRequestHeader'</span> <span class="keyword">in</span> request) &#123;</span><br><span class="line">      utils.forEach(requestHeaders, <span class="function"><span class="keyword">function</span> <span class="title">setRequestHeader</span>(<span class="params">val, key</span>) </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (<span class="keyword">typeof</span> requestData === <span class="string">'undefined'</span> &amp;&amp; key.toLowerCase() === <span class="string">'content-type'</span>) &#123;</span><br><span class="line">          <span class="comment">// 没有数据则删除头部的'content-type'字段</span></span><br><span class="line">          <span class="keyword">delete</span> requestHeaders[key];</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">          <span class="comment">// Otherwise add header to the request</span></span><br><span class="line">          request.setRequestHeader(key, val);</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 按需修改携带凭证标示</span></span><br><span class="line">    <span class="keyword">if</span> (config.withCredentials) &#123;</span><br><span class="line">      request.withCredentials = <span class="literal">true</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 按需添加结果类型</span></span><br><span class="line">    <span class="keyword">if</span> (config.responseType) &#123;</span><br><span class="line">      <span class="keyword">try</span> &#123;</span><br><span class="line">        request.responseType = config.responseType;</span><br><span class="line">      &#125; <span class="keyword">catch</span> (e) &#123;</span><br><span class="line">        <span class="comment">// 设置了与XMLHttpRequest Level 2不兼容的类型或者非json类型，会抛出异常</span></span><br><span class="line">        <span class="comment">// json类型在默认的transformResponseData可以被解析处理</span></span><br><span class="line">        <span class="keyword">if</span> (config.responseType !== <span class="string">'json'</span>) &#123;</span><br><span class="line">          <span class="keyword">throw</span> e;</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Handle progress if needed</span></span><br><span class="line">    <span class="keyword">if</span> (<span class="keyword">typeof</span> config.onDownloadProgress === <span class="string">'function'</span>) &#123;</span><br><span class="line">      request.addEventListener(<span class="string">'progress'</span>, config.onDownloadProgress);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Not all browsers support upload events</span></span><br><span class="line">    <span class="keyword">if</span> (<span class="keyword">typeof</span> config.onUploadProgress === <span class="string">'function'</span> &amp;&amp; request.upload) &#123;</span><br><span class="line">      request.upload.addEventListener(<span class="string">'progress'</span>, config.onUploadProgress);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (config.cancelToken) &#123;</span><br><span class="line">      <span class="comment">// Handle cancellation</span></span><br><span class="line">      config.cancelToken.promise.then(<span class="function"><span class="keyword">function</span> <span class="title">onCanceled</span>(<span class="params">cancel</span>) </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (!request) &#123;</span><br><span class="line">          <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        request.abort(); <span class="comment">// 调用abort方法，中断请求，会触发onabort事件</span></span><br><span class="line">        reject(cancel);</span><br><span class="line">        </span><br><span class="line">        <span class="comment">// 请求中断，去除引用</span></span><br><span class="line">        request = <span class="literal">null</span>;</span><br><span class="line">      &#125;);</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 没有请求数据，如；GET,DELETE,HEAD等</span></span><br><span class="line">    <span class="keyword">if</span> (requestData === <span class="literal">undefined</span>) &#123;</span><br><span class="line">      requestData = <span class="literal">null</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 发送请求信息</span></span><br><span class="line">    request.send(requestData);</span><br><span class="line">  &#125;);</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+<h1 id="文档链接："><a href="#文档链接：" class="headerlink" title="文档链接："></a>文档链接：</h1><p><a href="../Axios源码解读「整体代码文件结构说明」">Axios源码解读「整体代码文件结构说明」</a><br><a href="../Axios源码解读「帮助方法Helpers」">Axios源码解读「帮助方法Helpers」</a><br><a href="../Axios源码解读「通用工具函数」">Axios源码解读「通用工具函数」</a><br><a href="../Axios源码解读「适配器Adapter」">Axios源码解读「适配器Adapter」</a><br><a href="../Axios源码解读「实现请求的取消中断Cancel」">Axios源码解读「实现请求的取消中断Cancel」</a><br><a href="../Axios源码解读「默认配置项default」">Axios源码解读「默认配置项default」</a><br><a href="../Axios源码解读「核心逻辑部分Core」">Axios源码解读「核心逻辑部分Core」</a><br><a href="../Axios源码解读「静态API的注入」">Axios源码解读「静态API的注入」</a></p>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <hr />
+  <h6>如果我的文章对你有帮助，可以请我喝杯咖啡哈~</h6>
+  <div id="qr" style="display: block;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/wechatpay.jpg" alt="TanKingKhun 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="/images/alipay.jpg" alt="TanKingKhun 支付宝">
+        <p>支付宝</p>
+      </div>
+  </div>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/JavaScript/" rel="tag"># JavaScript</a>
+              <a href="/tags/Axios/" rel="tag"># Axios</a>
+              <a href="/tags/%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB/" rel="tag"># 源码阅读</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2019/12/04/Axios%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB%E3%80%8C%E6%A0%B8%E5%BF%83%E9%80%BB%E8%BE%91%E9%83%A8%E5%88%86Core%E3%80%8D/" rel="prev" title="Axios源码解读「核心逻辑部分Core」">
+      <i class="fa fa-chevron-left"></i> Axios源码解读「核心逻辑部分Core」
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2019/12/04/Axios%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB%E3%80%8C%E9%80%9A%E7%94%A8%E5%B7%A5%E5%85%B7%E5%87%BD%E6%95%B0%E3%80%8D/" rel="next" title="Axios源码解读「通用工具函数」">
+      Axios源码解读「通用工具函数」 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#1-Nodejs中的请求适配器，http-js"><span class="nav-text">1. Nodejs中的请求适配器，http.js</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-浏览器中的适配器，xhr-js"><span class="nav-text">2. 浏览器中的适配器，xhr.js</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#文档链接："><span class="nav-text">文档链接：</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="TanKingKhun"
+      src="https://avatars.githubusercontent.com/u/14145521?v=4">
+  <p class="site-author-name" itemprop="name">TanKingKhun</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">30</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">32</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/chenjk110" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;chenjk110" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:chenjk110@qq.com" title="E-Mail → mailto:chenjk110@qq.com" rel="noopener" target="_blank"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title"><i class="fa fa-link fa-fw"></i>
+      Links
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="http://www.wangjianfeng.net/" title="http:&#x2F;&#x2F;www.wangjianfeng.net&#x2F;" rel="noopener" target="_blank">YouSeeSeeMe</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://www.fidding.me/" title="http:&#x2F;&#x2F;www.fidding.me&#x2F;" rel="noopener" target="_blank">Fidding</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://zhujp.net/" title="http:&#x2F;&#x2F;zhujp.net&#x2F;" rel="noopener" target="_blank">Venus</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="https://toad.dev/" title="https:&#x2F;&#x2F;toad.dev&#x2F;" rel="noopener" target="_blank">Toad.Woo</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">TanKingKhun</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/theme-next/theme-next-pjax@0/pjax.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/lozad@1/dist/lozad.min.js"></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/velocity/1.2.1/velocity.min.js"></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/velocity/1.2.1/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+  <script>
+var pjax = new Pjax({
+  selectors: [
+    'head title',
+    '#page-configurations',
+    '.content-wrap',
+    '.post-toc-wrap',
+    '.languages',
+    '#pjax'
+  ],
+  switches: {
+    '.post-toc-wrap': Pjax.switches.innerHTML
+  },
+  analytics: false,
+  cacheBust: false,
+  scrollTo : !CONFIG.bookmark.enable
+});
+
+window.addEventListener('pjax:success', () => {
+  document.querySelectorAll('script[data-pjax], script#page-configurations, #pjax script').forEach(element => {
+    var code = element.text || element.textContent || element.innerHTML || '';
+    var parent = element.parentNode;
+    parent.removeChild(element);
+    var script = document.createElement('script');
+    if (element.id) {
+      script.id = element.id;
+    }
+    if (element.className) {
+      script.className = element.className;
+    }
+    if (element.type) {
+      script.type = element.type;
+    }
+    if (element.src) {
+      script.src = element.src;
+      // Force synchronous loading of peripheral JS.
+      script.async = false;
+    }
+    if (element.dataset.pjax !== undefined) {
+      script.dataset.pjax = '';
+    }
+    if (code !== '') {
+      script.appendChild(document.createTextNode(code));
+    }
+    parent.appendChild(script);
+  });
+  NexT.boot.refresh();
+  // Define Motion Sequence & Bootstrap Motion.
+  if (CONFIG.motion.enable) {
+    NexT.motion.integrator
+      .init()
+      .add(NexT.motion.middleWares.subMenu)
+      .add(NexT.motion.middleWares.postList)
+      .bootstrap();
+  }
+  NexT.utils.updateSidebarPosition();
+});
+</script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script data-pjax>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdnjs.cloudflare.com/ajax/libs/mermaid/8.4.8/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme    : 'forest',
+      logLevel : 3,
+      flowchart: { curve     : 'linear' },
+      gantt    : { axisFormat: '%m/%d/%Y' },
+      sequence : { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+    <div id="pjax">
+  
+
+  
+
+    </div>
+</body>
+</html>
